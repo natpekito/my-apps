@@ -1,0 +1,3201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Workout" />
+<title>Workout Tracker</title>
+<link rel="manifest" href="data:application/json,{&quot;name&quot;:&quot;Workout Tracker&quot;,&quot;short_name&quot;:&quot;Workout&quot;,&quot;display&quot;:&quot;standalone&quot;,&quot;background_color&quot;:&quot;%230d0d12&quot;,&quot;theme_color&quot;:&quot;%230d0d12&quot;,&quot;start_url&quot;:&quot;.&quot;}" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; background: #0d0d12; color: #fff; font-family: 'DM Sans', sans-serif; overflow-x: hidden; }
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+  input, textarea, button { font-family: 'DM Sans', sans-serif; }
+  input::placeholder, textarea::placeholder { color: rgba(255,255,255,0.2); }
+  a { text-decoration: none; color: inherit; }
+
+  #app { min-height: 100vh; padding-bottom: 80px; }
+
+  /* Header */
+  .header { padding: 30px 22px 20px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+  .header-eyebrow { font-size: 11px; letter-spacing: 3px; color: rgba(255,255,255,0.3); text-transform: uppercase; margin-bottom: 4px; }
+  .header-title { font-family: 'Bebas Neue', sans-serif; font-size: 36px; letter-spacing: 2px; line-height: 1; color: #fff; }
+  .header-sub { margin-top: 5px; font-size: 12px; color: rgba(255,255,255,0.35); }
+  .save-badge { margin-top: 8px; display: inline-flex; align-items: center; gap: 5px; background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.2); border-radius: 20px; padding: 3px 10px; }
+  .save-dot { width: 6px; height: 6px; border-radius: 50%; background: #22c55e; }
+  .save-label { font-size: 10px; color: #22c55e; }
+  .today-banner { margin-top: 12px; display: inline-flex; align-items: center; gap: 10px; border-radius: 14px; padding: 10px 16px; cursor: pointer; }
+
+  /* Tabs */
+  .tabs { display: flex; border-bottom: 1px solid rgba(255,255,255,0.06); }
+  .tab-btn { flex: 1; padding: 13px 0; border: none; cursor: pointer; background: transparent; color: rgba(255,255,255,0.3); font-weight: 400; font-size: 13px; border-bottom: 2px solid transparent; transition: all 0.2s; }
+  .tab-btn.active { color: #fff; font-weight: 700; border-bottom-color: #fff; }
+
+  /* Day pills */
+  .day-pills { display: flex; overflow-x: auto; gap: 8px; padding: 16px 0 16px; scrollbar-width: none; }
+  .day-pills::-webkit-scrollbar { display: none; }
+  .day-pill { flex-shrink: 0; padding: 8px 16px; border-radius: 50px; border: 1px solid rgba(255,255,255,0.1); background: transparent; color: rgba(255,255,255,0.45); font-weight: 500; font-size: 13px; cursor: pointer; transition: all 0.2s; }
+  .day-pill.active { border: none; color: #fff; font-weight: 700; }
+
+  /* Content */
+  .content { padding: 18px 20px 0; }
+
+  /* Day header */
+  .day-header { border-radius: 20px; padding: 18px 16px; margin-bottom: 14px; }
+  .day-header-inner { display: flex; align-items: center; gap: 12px; }
+  .day-emoji { font-size: 30px; }
+  .day-title { font-family: 'Bebas Neue', sans-serif; font-size: 24px; letter-spacing: 1.5px; }
+  .day-focus { font-size: 12px; color: rgba(255,255,255,0.4); margin-top: 2px; }
+  .day-badges { margin-left: auto; display: flex; flex-direction: column; align-items: flex-end; gap: 5px; }
+  .badge { border-radius: 10px; padding: 4px 12px; font-size: 12px; font-weight: 700; }
+  .badge-time { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.5); font-size: 11px; font-weight: 600; }
+
+  /* Buttons */
+  .complete-btn { margin-top: 14px; width: 100%; padding: 11px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.7); font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+  .complete-btn.done { background: rgba(34,197,94,0.15); border-color: rgba(34,197,94,0.4); color: #22c55e; }
+  .reset-btn { margin-top: 8px; width: 100%; padding: 9px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.07); background: rgba(255,255,255,0.03); color: rgba(255,255,255,0.3); font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+  .reset-btn.confirm { background: rgba(239,68,68,0.15); border-color: rgba(239,68,68,0.4); color: #ef4444; }
+
+  /* Video card */
+  .video-card { display: flex; align-items: center; gap: 14px; border-radius: 14px; padding: 14px 16px; margin-bottom: 12px; }
+  .video-icon { width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 18px; }
+  .video-label { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 3px; }
+  .video-title { font-size: 13px; font-weight: 600; color: #fff; line-height: 1.3; }
+  .video-meta { font-size: 11px; color: rgba(255,255,255,0.3); margin-top: 3px; }
+  .video-arrow { color: rgba(255,255,255,0.2); font-size: 16px; flex-shrink: 0; margin-left: auto; }
+
+  /* Exercise card */
+  .exercise-card { border-radius: 12px; padding: 12px 14px; margin-bottom: 8px; transition: all 0.2s; }
+  .exercise-header { display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+  .exercise-name-row { display: flex; align-items: center; gap: 7px; }
+  .exercise-name { color: #fff; font-weight: 600; font-size: 14px; }
+  .ex-badge-done { font-size: 11px; color: #22c55e; }
+  .ex-badge-progress { font-size: 11px; }
+  .exercise-tags { display: flex; gap: 6px; margin-top: 5px; flex-wrap: wrap; }
+  .tag { font-size: 11px; padding: 2px 8px; border-radius: 20px; font-weight: 600; }
+  .tag-muted { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.4); font-weight: 400; }
+  .chevron { color: rgba(255,255,255,0.3); font-size: 14px; margin-left: 8px; }
+
+  /* Set logger */
+  .sets-container { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
+  .set-row { display: flex; align-items: center; gap: 10px; }
+  .set-check { width: 26px; height: 26px; border-radius: 6px; border: 2px solid rgba(255,255,255,0.2); background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.2s; font-size: 13px; font-weight: 700; color: #fff; }
+  .set-check.checked { background: #22c55e; border-color: #22c55e; }
+  .set-label { color: rgba(255,255,255,0.4); font-size: 12px; width: 42px; flex-shrink: 0; }
+  .set-input { background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #fff; font-size: 12px; padding: 4px 8px; width: 100%; outline: none; }
+  .set-input-group { display: flex; gap: 6px; flex: 1; align-items: center; }
+  .set-input-small { width: 60px; flex-shrink: 0; }
+  .set-input-label { font-size: 10px; color: rgba(255,255,255,0.3); margin-bottom: 2px; }
+  .reps-controls { display: flex; flex-direction: column; gap: 2px; margin-left: -4px; }
+  .reps-arrow { width: 24px; height: 18px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); border-radius: 4px; color: rgba(255,255,255,0.6); font-size: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-family: 'DM Sans', sans-serif; transition: all 0.15s; }
+  .reps-arrow:active { background: rgba(255,255,255,0.15); }
+  .weight-quick-select { display: flex; gap: 4px; margin-bottom: 10px; flex-wrap: wrap; }
+  .weight-btn { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); border-radius: 6px; color: rgba(255,255,255,0.6); font-size: 11px; font-weight: 600; padding: 4px 8px; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.2s; }
+  .weight-btn:hover { background: rgba(255,255,255,0.15); }
+  .weight-btn.active { background: #FF6B35; border-color: #FF6B35; color: #fff; }
+  .weight-override-btn { width: 20px; height: 20px; border-radius: 4px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.4); font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.2s; margin-left: 4px; }
+  .weight-override-btn:hover { background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.7); }
+  .set-weight-picker { display: none; gap: 3px; margin-top: 4px; flex-wrap: wrap; }
+  .set-weight-picker.open { display: flex; }
+  .set-weight-picker .weight-btn { font-size: 10px; padding: 3px 6px; }
+
+  /* Notes */
+  .notes-label { font-size: 11px; letter-spacing: 2px; color: rgba(255,255,255,0.3); text-transform: uppercase; margin-bottom: 8px; margin-top: 16px; }
+  .notes-area { width: 100%; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: #fff; font-size: 13px; padding: 12px 14px; outline: none; resize: none; }
+
+  /* Tips */
+  .tips-card { margin-top: 16px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); border-radius: 14px; padding: 14px 16px; }
+  .tips-title { font-size: 11px; letter-spacing: 2px; color: rgba(255,255,255,0.3); text-transform: uppercase; margin-bottom: 10px; }
+  .tips-text { font-size: 12px; color: rgba(255,255,255,0.45); line-height: 1.9; }
+  .tips-text b { color: #fff; font-weight: 600; }
+
+  /* Calendar */
+  .calendar-wrap { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 18px 16px; margin-bottom: 20px; }
+  .cal-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .cal-nav-btn { background: none; border: none; color: rgba(255,255,255,0.4); font-size: 22px; cursor: pointer; padding: 4px 10px; line-height: 1; }
+  .cal-month { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 2px; }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+  .cal-day-label { text-align: center; font-size: 9px; color: rgba(255,255,255,0.22); font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 2px 0 6px; }
+  .cal-cell { aspect-ratio: 1; border-radius: 9px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; border: 1px solid transparent; cursor: pointer; }
+  .cal-num { font-size: 11px; font-weight: 500; color: rgba(255,255,255,0.6); }
+  .cal-dot { width: 4px; height: 4px; border-radius: 50%; margin-top: 2px; }
+  .cal-check { font-size: 7px; position: absolute; top: 2px; right: 3px; }
+  .cal-legend { display: flex; gap: 14px; margin-top: 14px; flex-wrap: wrap; }
+  .legend-item { display: flex; align-items: center; gap: 5px; }
+  .legend-dot { width: 7px; height: 7px; border-radius: 50%; }
+  .legend-label { font-size: 10px; color: rgba(255,255,255,0.35); }
+
+  /* Streak */
+  .streak-row { display: flex; gap: 10px; margin-top: 14px; }
+  .streak-box { flex: 1; background: rgba(255,255,255,0.04); border-radius: 12px; padding: 10px; text-align: center; }
+  .streak-num { font-family: 'Bebas Neue', sans-serif; font-size: 28px; }
+  .streak-lbl { font-size: 10px; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 1px; }
+
+  /* Sunday */
+  .stretch-section { margin-bottom: 20px; }
+  .stretch-section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .stretch-section-title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+  .stretch-section-dur { font-size: 11px; color: rgba(255,255,255,0.3); }
+  .stretch-move { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07); border-radius: 12px; padding: 12px 14px; margin-bottom: 7px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+  .stretch-name { color: #fff; font-weight: 500; font-size: 14px; }
+  .stretch-hold { font-size: 11px; padding: 3px 10px; border-radius: 20px; font-weight: 600; flex-shrink: 0; margin-left: 10px; }
+
+  /* Rest timer */
+  #rest-timer-overlay { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); z-index: 999; background: #1a1a24; border: 1px solid rgba(255,255,255,0.15); border-radius: 20px; padding: 14px 22px; display: flex; align-items: center; gap: 14px; box-shadow: 0 8px 32px rgba(0,0,0,0.5); min-width: 240px; }
+  #rest-timer-label { font-size: 11px; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 1px; }
+  #rest-timer-count { font-family: 'Bebas Neue', sans-serif; font-size: 32px; line-height: 1; }
+  #rest-timer-bar { height: 3px; border-radius: 2px; background: rgba(255,255,255,0.1); margin-top: 4px; }
+  #rest-timer-bar-fill { height: 3px; border-radius: 2px; transition: width 1s linear; }
+  #rest-timer-skip { background: rgba(255,255,255,0.08); border: none; border-radius: 10px; color: rgba(255,255,255,0.5); font-size: 11px; font-weight: 600; padding: 6px 12px; cursor: pointer; flex-shrink: 0; font-family: 'DM Sans', sans-serif; }
+
+  /* Session timer */
+  #session-timer { display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 4px 12px; margin-top: 8px; }
+  #session-timer-dot { width: 6px; height: 6px; border-radius: 50%; background: #22c55e; animation: pulse 1.5s infinite; }
+  #session-timer-val { font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.6); }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  /* PR badge */
+  .pr-badge { display: inline-flex; align-items: center; gap: 3px; background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.35); border-radius: 8px; padding: 2px 7px; font-size: 10px; font-weight: 700; color: #F59E0B; margin-left: 6px; }
+
+  /* Stretch timer btn */
+  .stretch-timer-btn { background: rgba(96,184,255,0.12); border: 1px solid rgba(96,184,255,0.25); border-radius: 10px; color: #60B8FF; font-size: 11px; font-weight: 600; padding: 5px 12px; cursor: pointer; font-family: 'DM Sans', sans-serif; flex-shrink: 0; transition: all 0.2s; }
+  .stretch-timer-btn.running { background: rgba(96,184,255,0.25); }
+  .stretch-timer-btn.done { background: rgba(34,197,94,0.2); border-color: rgba(34,197,94,0.4); color: #22c55e; }
+
+  /* Heatmap */
+  .heatmap-body { position: relative; width: 160px; height: 280px; margin: 0 auto; }
+  .heatmap-zone { position: absolute; border-radius: 6px; cursor: default; transition: opacity 0.3s; }
+  .prev-weight-hint { font-size: 10px; color: rgba(255,255,255,0.28); font-style: italic; margin-left: 4px; }
+
+  /* Muscle Modal */
+  #muscle-modal-overlay {
+    position: fixed; inset: 0; z-index: 1000;
+    background: rgba(0,0,0,0.75); backdrop-filter: blur(6px);
+    display: flex; align-items: flex-end; justify-content: center;
+    opacity: 0; pointer-events: none; transition: opacity 0.25s;
+  }
+  #muscle-modal-overlay.open { opacity: 1; pointer-events: all; }
+  #muscle-modal {
+    width: 100%; max-width: 480px;
+    background: #14141e; border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 24px 24px 0 0; padding: 0 0 32px;
+    transform: translateY(40px); transition: transform 0.3s cubic-bezier(.22,1,.36,1);
+    max-height: 90vh; overflow-y: auto; position: relative;
+  }
+  #muscle-modal-overlay.open #muscle-modal { transform: translateY(0); }
+  .muscle-modal-handle { width: 36px; height: 4px; border-radius: 2px; background: rgba(255,255,255,0.15); margin: 12px auto 0; }
+  .muscle-modal-header { padding: 16px 20px 12px; border-bottom: 1px solid rgba(255,255,255,0.07); }
+  .muscle-modal-title { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 2px; }
+  .muscle-modal-sub { font-size: 12px; color: rgba(255,255,255,0.35); margin-top: 2px; }
+  .muscle-modal-close { position: absolute; top: 14px; right: 18px; background: rgba(255,255,255,0.08); border: none; color: rgba(255,255,255,0.5); width: 28px; height: 28px; border-radius: 50%; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-family: 'DM Sans', sans-serif; }
+  .muscle-figure-wrap { display: flex; gap: 12px; justify-content: center; padding: 20px 16px 10px; }
+  .muscle-figure-wrap svg { width: 120px; height: auto; }
+  .muscle-group-chip { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; margin: 3px; }
+  .muscle-primary-chip { background: rgba(255,107,53,0.2); border: 1px solid rgba(255,107,53,0.5); color: #FF6B35; }
+  .muscle-secondary-chip { background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12); color: rgba(255,255,255,0.45); }
+  .muscle-section-label { font-size: 10px; letter-spacing: 2px; color: rgba(255,255,255,0.3); text-transform: uppercase; margin: 12px 0 6px; }
+  .tag-target { cursor: pointer; transition: opacity 0.15s; }
+  .tag-target:hover { opacity: 0.75; }
+
+  /* Completion Summary Modal */
+  #completion-modal-overlay { position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+  #completion-modal-overlay.open { opacity: 1; pointer-events: all; }
+  #completion-modal { width: 90%; max-width: 380px; background: #14141e; border: 1px solid rgba(255,255,255,0.15); border-radius: 20px; padding: 24px; transform: scale(0.9); transition: transform 0.3s cubic-bezier(.22,1,.36,1); }
+  #completion-modal-overlay.open #completion-modal { transform: scale(1); }
+  .completion-emoji { font-size: 48px; text-align: center; margin-bottom: 12px; }
+  .completion-title { font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 2px; text-align: center; margin-bottom: 8px; }
+  .completion-subtitle { font-size: 13px; color: rgba(255,255,255,0.4); text-align: center; margin-bottom: 20px; }
+  .completion-stat { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: rgba(255,255,255,0.05); border-radius: 12px; margin-bottom: 8px; }
+  .completion-stat-label { font-size: 13px; color: rgba(255,255,255,0.5); }
+  .completion-stat-value { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 1px; }
+  .completion-close-btn { width: 100%; padding: 12px; border-radius: 12px; border: none; background: linear-gradient(135deg, #FF6B35, #F59E0B); color: #fff; font-size: 14px; font-weight: 700; cursor: pointer; margin-top: 16px; font-family: 'DM Sans', sans-serif; transition: all 0.2s; }
+  .completion-close-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(255,107,53,0.4); }
+
+  /* Today's Stats Card */
+  .today-stats-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 14px 16px; margin-bottom: 14px; }
+  .today-stats-row { display: flex; gap: 10px; }
+  .today-stat-box { flex: 1; text-align: center; }
+  .today-stat-value { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 1px; }
+  .today-stat-label { font-size: 10px; color: rgba(255,255,255,0.3); text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; }
+
+  /* Exercise Quick Actions */
+  .exercise-quick-actions { display: flex; gap: 6px; margin-left: auto; }
+  .quick-action-btn { width: 28px; height: 28px; border-radius: 8px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.4); font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; flex-shrink: 0; }
+  .quick-action-btn:hover { background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.7); transform: translateY(-1px); }
+  .quick-action-btn:active { transform: translateY(0); }
+
+  @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+  @keyframes slideDown { from { transform: translateY(-100%); } to { transform: translateY(0); } }
+  @keyframes timerFlash { 0% { opacity:0; transform:scale(0.95); } 100% { opacity:1; transform:scale(1); } }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<!-- Muscle Heatmap Modal -->
+<div id="muscle-modal-overlay" onclick="closeMuscleModal(event)">
+  <div id="muscle-modal">
+    <div class="muscle-modal-handle"></div>
+    <div class="muscle-modal-header">
+      <div class="muscle-modal-title" id="muscle-modal-title">MUSCLE MAP</div>
+      <div class="muscle-modal-sub" id="muscle-modal-sub"></div>
+      <button class="muscle-modal-close" onclick="closeMuscleModal()">✕</button>
+    </div>
+    <div id="muscle-modal-body"></div>
+  </div>
+</div>
+
+<!-- Completion Summary Modal -->
+<div id="completion-modal-overlay" onclick="closeCompletionModal(event)">
+  <div id="completion-modal">
+    <div class="completion-emoji" id="completion-emoji">🎉</div>
+    <div class="completion-title" id="completion-title">SESSION COMPLETE!</div>
+    <div class="completion-subtitle" id="completion-subtitle">Great work today</div>
+    <div id="completion-stats"></div>
+    <button class="completion-close-btn" onclick="closeCompletionModal()">Continue</button>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = 'natalia-workout-completed-dates';
+const SET_LOGS_KEY = 'natalia-set-logs';
+const OVERRIDE_KEY = 'natalia-workout-override';
+const PR_KEY = 'natalia-prs';
+const PREV_WEIGHTS_KEY = 'natalia-prev-weights';
+const SESSION_START_KEY = 'natalia-session-start';
+const SESSION_DURATIONS_KEY = 'natalia-session-durations';
+const SESSION_NOTES_KEY = 'natalia-session-notes';
+const VOLUME_KEY = 'natalia-volume';
+const REPS_KEY = 'natalia-reps';
+const PROG_PB_KEY = 'natalia-prog-pbs'; // personal bests for progression exercises
+
+// ── Progression System ────────────────────────────────────
+const PROGRESSION_START = new Date('2026-05-22'); // Pull-up bar install + push-up start
+
+const PULLUP_PHASES = [
+  {
+    phase: 1, weeks: '1–2', label: 'Dead Hangs & Scapular Pulls',
+    color: '#60B8FF',
+    exercises: [
+      { name: 'Dead Hang', sets: '3', reps: '20–30 sec', note: 'Hang passively — shoulders relaxed, then depressed' },
+      { name: 'Scapular Pull-ups', sets: '3', reps: '5–8 reps', note: 'Depress scaps without bending elbows' },
+      { name: 'Band-Assisted Negative Pull-ups', sets: '3', reps: '3–5 slow negatives', note: 'Take 5–8 sec to lower down' },
+    ],
+    tip: 'Build grip strength and shoulder stability. Focus on scapular control — this is the foundation.'
+  },
+  {
+    phase: 2, weeks: '3–4', label: 'Eccentric Pull-ups & Flexed Hangs',
+    color: '#A78BFA',
+    exercises: [
+      { name: 'Flexed Arm Hang', sets: '3', reps: '10–20 sec hold', note: 'Hold chin above bar as long as possible' },
+      { name: 'Slow Negative Pull-ups', sets: '3', reps: '5 reps (8 sec down)', note: 'Use a chair/band to get up, control descent' },
+      { name: 'Band-Assisted Pull-ups', sets: '3', reps: '5–8 reps', note: 'Light band — focus on full range of motion' },
+    ],
+    tip: 'Eccentric strength builds fast. Your first full pull-up is very close after this phase.'
+  },
+  {
+    phase: 3, weeks: '5–6', label: 'First Full Pull-up Attempts',
+    color: '#34D399',
+    exercises: [
+      { name: 'Full Pull-up Attempts', sets: '3–5', reps: 'Max reps (even if just 1)', note: 'Rest 3 min between sets — quality over quantity' },
+      { name: 'Band-Assisted Pull-ups', sets: '2', reps: '8–10 reps', note: 'Lighter band than Phase 2' },
+      { name: 'Slow Negatives', sets: '2', reps: '5 reps', note: 'Add weight via backpack if bodyweight is easy' },
+    ],
+    tip: 'Go for your first unassisted rep! Even a partial counts. Every attempt builds neural patterning.'
+  },
+  {
+    phase: 4, weeks: '7–8', label: 'Building Reps',
+    color: '#F59E0B',
+    exercises: [
+      { name: 'Pull-ups', sets: '4–5', reps: '2–5 reps per set', note: 'Stop 1 rep before failure each set' },
+      { name: 'Chin-ups (underhand)', sets: '3', reps: 'Max reps', note: 'Easier grip — builds bicep contribution' },
+      { name: 'L-Sit Pull-ups', sets: '2', reps: '3–5 reps', note: 'Legs straight out in front — core intense' },
+    ],
+    tip: 'Volume is key now. Multiple sets of low reps beats grinding to failure.'
+  },
+  {
+    phase: 5, weeks: '9+', label: 'Strength & Progression',
+    color: '#FF6B35',
+    exercises: [
+      { name: 'Weighted Pull-ups', sets: '4', reps: '4–6 reps', note: 'Add 5–10 lbs via belt or backpack' },
+      { name: 'Wide-Grip Pull-ups', sets: '3', reps: '5–8 reps', note: 'Wider grip = more lats, less bicep' },
+      { name: 'Archer Pull-ups', sets: '3', reps: '3–5 each side', note: 'Shift weight to one arm progressively' },
+    ],
+    tip: 'Strength mode. Add weight, vary grip, and work toward one-arm assisted pull-ups.'
+  }
+];
+
+const PUSHUP_PHASES = [
+  {
+    phase: 1, weeks: '1–2', label: 'Wall & Incline Push-ups',
+    color: '#FF6B35',
+    exercises: [
+      { name: 'Wall Push-ups', sets: '3', reps: '15–20 reps', note: 'Stand ~arm\'s length from wall, chest to wall' },
+      { name: 'Elevated Push-ups (high)', sets: '3', reps: '10–15 reps', note: 'Hands on bench/table edge' },
+      { name: 'Knee Push-ups', sets: '3', reps: '10 reps', note: 'Knees down, straight line from knees to head' },
+    ],
+    tip: 'Build the movement pattern with zero wrist/shoulder strain. Perfect form beats reps.'
+  },
+  {
+    phase: 2, weeks: '3–4', label: 'Incline to Knee Push-ups',
+    color: '#F59E0B',
+    exercises: [
+      { name: 'Lower Incline Push-ups', sets: '3', reps: '12–15 reps', note: 'Hands on a lower surface ~chair height' },
+      { name: 'Knee Push-ups', sets: '3', reps: '15 reps', note: 'Work toward full range, chest nearly touching ground' },
+      { name: 'Negative Full Push-ups', sets: '3', reps: '5 slow reps (5 sec down)', note: 'Go down slow, use knees to push back up' },
+    ],
+    tip: 'Focus on chest touching the ground on every rep. Depth is everything.'
+  },
+  {
+    phase: 3, weeks: '5–6', label: 'First Full Push-ups',
+    color: '#34D399',
+    exercises: [
+      { name: 'Full Push-ups', sets: '3–5', reps: 'Max reps (even 1–2)', note: 'Rest fully between sets. Quality over quantity.' },
+      { name: 'Knee Push-ups', sets: '2', reps: '15–20 reps', note: 'Finisher — pump the chest' },
+      { name: 'Diamond Push-ups (knees)', sets: '2', reps: '10 reps', note: 'Hands forming a diamond = more tricep' },
+    ],
+    tip: 'Your first full push-up is here! Even 1 real one is massive progress.'
+  },
+  {
+    phase: 4, weeks: '7–8', label: 'Building Push-up Volume',
+    color: '#A78BFA',
+    exercises: [
+      { name: 'Full Push-ups', sets: '4–5', reps: '5–10 reps', note: 'Add a rep each session — progressive overload' },
+      { name: 'Wide-Grip Push-ups', sets: '3', reps: '10 reps', note: 'More chest activation' },
+      { name: 'Close-Grip Push-ups', sets: '3', reps: '8–10 reps', note: 'More tricep + inner chest' },
+    ],
+    tip: 'Volume now. Aim to add 1 rep to your max per session.'
+  },
+  {
+    phase: 5, weeks: '9+', label: 'Strength Push-up Variations',
+    color: '#60B8FF',
+    exercises: [
+      { name: 'Archer Push-ups', sets: '3', reps: '5 each side', note: 'One arm bears most weight — toward one-arm' },
+      { name: 'Decline Push-ups', sets: '3', reps: '10–12 reps', note: 'Feet elevated = upper chest and shoulders' },
+      { name: 'Weighted Push-ups', sets: '3', reps: '8–10 reps', note: 'Plate on back or wear a backpack' },
+    ],
+    tip: 'Advanced territory. Mix variations to keep gains coming.'
+  }
+];
+
+function getProgressionPhase(type) {
+  const PULLUP_DAYS = new Set(['Wednesday', 'Friday']);
+  const PUSHUP_DAYS = new Set(['Monday', 'Friday']);
+  const days = type === 'pullup' ? PULLUP_DAYS : PUSHUP_DAYS;
+  const sessionsPerPhase = type === 'pullup' ? 6 : 4;
+
+  const start = new Date(PROGRESSION_START);
+  start.setHours(0, 0, 0, 0);
+
+  let sessionCount = 0;
+  for (const [key, planDay] of Object.entries(state.completed)) {
+    if (!planDay) continue;
+    const parts = key.split('-');
+    const d = new Date(parseInt(parts[0]), parseInt(parts[1]), parseInt(parts[2]));
+    d.setHours(0, 0, 0, 0);
+    if (d >= start && days.has(planDay)) sessionCount++;
+  }
+
+  let phaseIndex = Math.min(Math.floor(sessionCount / sessionsPerPhase), 4);
+
+  // Manual phase override — allows advancing phase regardless of session count
+  try {
+    const overrideKey = type === 'pullup' ? 'natalia-pullup-phase-override' : 'natalia-pushup-phase-override';
+    const override = localStorage.getItem(overrideKey);
+    if (override !== null) phaseIndex = Math.max(phaseIndex, Math.min(parseInt(override), 4));
+  } catch(e) {}
+
+  const sessionsIntoPhase = sessionCount - phaseIndex * sessionsPerPhase;
+  const sessionsUntilNext = phaseIndex < 4 ? Math.max(sessionsPerPhase - sessionsIntoPhase, 0) : 0;
+
+  return { sessionCount, phaseIndex, sessionsIntoPhase: Math.max(sessionsIntoPhase, 0), sessionsUntilNext, sessionsPerPhase };
+}
+
+function buildProgressionCard(type) {
+  const { sessionCount, phaseIndex, sessionsIntoPhase, sessionsUntilNext, sessionsPerPhase } = getProgressionPhase(type);
+  const phases = type === 'pullup' ? PULLUP_PHASES : PUSHUP_PHASES;
+  const phase = phases[phaseIndex];
+  const c = phase.color;
+  const totalPhases = phases.length;
+
+  const exRows = phase.exercises.map(e => `
+    <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:10px 12px;margin-bottom:7px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">
+        <span style="font-size:13px;font-weight:600;color:#fff">${e.name}</span>
+        <span style="font-size:11px;font-weight:700;background:${c}22;color:${c};border-radius:8px;padding:2px 9px">${e.sets} × ${e.reps}</span>
+      </div>
+      <div style="font-size:11px;color:rgba(255,255,255,0.4);line-height:1.5">💡 ${e.note}</div>
+    </div>`).join('');
+
+  const phaseDots = phases.map((p, i) => {
+    const done = i < phaseIndex;
+    const current = i === phaseIndex;
+    return `<div style="flex:1;height:4px;border-radius:2px;background:${done ? p.color : (current ? p.color+'88' : 'rgba(255,255,255,0.1)')}"></div>`;
+  }).join('');
+
+  // Mini dots showing sessions completed within this phase (out of 4)
+  const sessionDots = Array.from({length: sessionsPerPhase}, (_, i) => {
+    const filled = i < sessionsIntoPhase;
+    return `<div style="width:10px;height:10px;border-radius:50%;background:${filled ? c : 'rgba(255,255,255,0.12)'};border:1.5px solid ${filled ? c : 'rgba(255,255,255,0.15)'}"></div>`;
+  }).join('');
+
+  const typeLabel = type === 'pullup' ? '🏋️ Pull-up Bar' : '💪 Push-up';
+  const typeIcon = type === 'pullup' ? '🔝' : '⬆️';
+  const nextMsg = phaseIndex < totalPhases - 1
+    ? `${sessionsUntilNext} more session${sessionsUntilNext !== 1 ? 's' : ''} to Phase ${phase.phase + 1}`
+    : '🏆 Final Phase — Elite Territory';
+
+  return `
+  <div style="background:linear-gradient(135deg,${c}12,${c}06);border:1px solid ${c}35;border-radius:16px;padding:16px;margin-bottom:12px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <div>
+        <div style="font-size:10px;letter-spacing:2px;color:rgba(255,255,255,0.35);text-transform:uppercase;margin-bottom:3px">${typeLabel} Progression</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px;color:${c}">Phase ${phase.phase} — ${phase.label}</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0;margin-left:10px">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;color:${c}">${sessionCount}</div>
+        <div style="font-size:10px;color:rgba(255,255,255,0.3)">sessions logged</div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:3px;margin-bottom:10px">${phaseDots}</div>
+
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div style="display:flex;gap:6px;align-items:center">${sessionDots}</div>
+      <div style="font-size:11px;color:${phaseIndex < totalPhases-1 ? 'rgba(255,255,255,0.3)' : c}">${nextMsg}</div>
+    </div>
+
+    <div style="font-size:11px;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Today's ${typeIcon} Work</div>
+    ${exRows}
+    
+    <div style="background:${c}12;border-left:3px solid ${c};border-radius:0 8px 8px 0;padding:9px 12px;margin-top:4px">
+      <div style="font-size:11px;color:${c};font-weight:700;margin-bottom:2px">Coach note</div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.5);line-height:1.6">${phase.tip}</div>
+    </div>
+  </div>`;
+}
+
+const PLAN = {
+  Monday: {
+    label: 'Push', color: '#FF6B35', emoji: '🔥',
+    focus: 'Chest · Shoulders · Triceps', duration: '~90 min',
+    pre:  { title: '10 Min Full Body Pre-Workout Stretch & Warm-Up', url: 'https://www.youtube.com/watch?v=ixZVPFJWnRY', dur: '~10 min' },
+    post: { title: 'Post Workout Stretch: Chest & Shoulders', url: 'https://www.youtube.com/watch?v=hTYtjamIkCM', dur: '~8 min' },
+    exercises: [
+      { name: 'Dumbbell Bench Press',    sets: 4, reps: '10–12', eq: 'DB + Bench',  rest: '90 sec', muscles: 'Chest · Front Delts · Triceps',
+        setup: '🛋️ Lie flat on the bench with feet planted on the floor. Grip DBs slightly wider than shoulder-width, palms facing forward. Lower DBs to chest level — elbows at ~45° from your torso, not flared straight out. Press up and slightly in, squeezing chest at the top. Keep your back flat (a slight natural arch is ok). Think: "protect your armpits" to find the right elbow angle.' },
+      { name: 'Push-ups',                sets: 3, reps: 'Phase-based', eq: 'Bodyweight',  rest: '60 sec', muscles: 'Chest · Triceps · Core', progression: 'pushup' },
+      { name: 'Dumbbell Shoulder Press', sets: 3, reps: '10',    eq: 'DB',          rest: '90 sec', muscles: 'Front & Side Delts · Triceps',
+        setup: '🪑 Sit upright (or stand tall, core tight). Start with DBs at shoulder height, palms facing forward, elbows at 90°. Press straight up until arms are nearly locked — don\'t shrug your traps. Lower slowly back to start. Keep your lower back from arching; brace your core the whole set. Avoid pressing behind your head — straight up and slightly forward is safer for your shoulder joint.' },
+      { name: 'Lateral Raises',          sets: 3, reps: '12',    eq: 'DB',          rest: '60 sec', muscles: 'Side Delts',
+        setup: '⬆️ Stand with DBs at your sides, slight bend in elbows. Raise arms out to the side until roughly parallel to the floor — like pouring water out of a jug (pinky side slightly higher than thumb). Lead with your elbows, not your hands. Control the descent — don\'t let gravity drop them. Use lighter weight than you think. If you\'re shrugging to get them up, the weight is too heavy.' },
+      { name: 'Tricep Dips on Bench',    sets: 3, reps: '12',    eq: 'Bench',       rest: '60 sec', muscles: 'Triceps · Chest · Front Delts',
+        setup: '🪑 Sit on edge of bench, hands gripping the edge beside your hips, fingers pointing forward. Scoot your hips off the bench and lower your body by bending your elbows — keep them pointing straight back, not flaring out. Lower until elbows hit 90°, then press back up. Keep your back close to the bench the whole time. Feet flat on floor for easier, legs extended for harder.' },
+      { name: 'Band Tricep Pushdowns',   sets: 3, reps: '15',    eq: 'Band',        rest: '60 sec', muscles: 'Triceps (all 3 heads)',
+        setup: '🎗️ Anchor the band overhead (door frame, pull-up bar, etc.). Stand facing the anchor, grip the band with both hands, elbows tucked tight to your sides at 90°. Push down until arms are fully extended — squeeze hard at the bottom. Slowly return to start; don\'t let elbows fly up or forward. Your upper arms should stay pinned to your sides the whole movement — only your forearms move.' },
+    ]
+  },
+  Tuesday: {
+    label: 'Lower + Abs', color: '#4ECDC4', emoji: '⚡',
+    focus: 'Quads · Glutes · Core', duration: '~75 min',
+    pre:  { title: '10 Min Full Body Pre-Workout Stretch & Warm-Up', url: 'https://www.youtube.com/watch?v=ixZVPFJWnRY', dur: '~10 min' },
+    post: { title: '10 Min Lower Body Stretch — Hamstrings & Hip Flexors', url: 'https://www.youtube.com/watch?v=UIRTPXj1Q1U', dur: '~10 min' },
+    exercises: [
+      { name: 'Dumbbell Squats',              sets: 4, reps: '12',       eq: 'DB',          rest: '90 sec', muscles: 'Quads · Glutes · Core',
+        setup: '🏋️ Hold one DB vertically at your chest (goblet style) or one in each hand at your sides. Feet shoulder-width apart, toes slightly turned out. Brace your core, sit back and down — knees track over your toes, chest stays tall. Hit parallel (thighs level with floor) or deeper. Drive through your heels to stand. Don\'t let your knees cave inward on the way up.' },
+      { name: 'Bulgarian Split Squats',       sets: 3, reps: '10 each',  eq: 'DB + Bench',  rest: '90 sec', muscles: 'Quads · Glutes · Hip Flexors',
+        setup: '🦵 Stand ~2 feet in front of the bench. Place one foot behind you, laces-down on the bench (or top of foot flat). Hold DBs at your sides. Keep your torso upright and lower your back knee toward the floor — front shin should stay mostly vertical. Push through your front heel to come back up. Start without weight to find your stance. This is the hardest exercise in the program — go slow.' },
+      { name: 'Dumbbell Romanian Deadlifts',  sets: 3, reps: '12',       eq: 'DB',          rest: '90 sec', muscles: 'Hamstrings · Glutes · Lower Back',
+        setup: '📏 Stand with DBs in front of your thighs, palms facing you. Soft bend in knees (keep it there the whole set). Hinge at your hips — push them back like you\'re closing a door with your butt. Lower the DBs down your legs, back flat, chest proud. Feel the stretch in your hamstrings (not your lower back!). When you feel maximum pull (~mid-shin), drive hips forward to stand. It\'s a hip hinge, not a squat.' },
+      { name: 'Glute Bridges w/ Dumbbell',   sets: 3, reps: '15',       eq: 'DB + Bench',  rest: '60 sec', muscles: 'Glutes · Hamstrings · Core',
+        setup: '🍑 Lie on your back, knees bent, feet flat on floor ~hip-width apart. Place a DB on your hips (hold it steady with both hands). Drive through your heels to lift your hips — squeeze your glutes hard at the top, forming a straight line from knees to shoulders. Hold 1 second at the top, then lower slowly. Don\'t hyperextend your lower back; think "tuck your pelvis" at the top.' },
+      { name: 'Plank',                        sets: 3, reps: '45 sec',   eq: 'Bodyweight',  rest: '45 sec', muscles: 'Core · Shoulders · Glutes',
+        setup: '🔒 Forearms on the floor, elbows under shoulders, hands flat. Body forms a straight line — don\'t let your hips sag or spike up. Squeeze everything: abs, glutes, quads. Breathe normally. If your form breaks, stop and rest — a 30-sec perfect plank beats a 60-sec saggy one. Gaze at a spot on the floor slightly in front of you to keep neck neutral.' },
+      { name: 'Leg Raises',                   sets: 3, reps: '15',       eq: 'Bodyweight',  rest: '45 sec', muscles: 'Lower Abs · Hip Flexors',
+        setup: '🦵 Lie flat on your back, hands under your lower back/glutes for support. Start with legs straight, a few inches off the floor. Keeping legs together and as straight as possible, raise them to 90°. Lower slowly — stop just before your feet touch the ground. That bottom tension is where it works. If your lower back arches off the floor, bend your knees slightly until you build more strength.' },
+    ]
+  },
+  Wednesday: {
+    label: 'Pull', color: '#A78BFA', emoji: '💪',
+    focus: 'Back · Biceps', duration: '~90 min',
+    pre:  { title: '10 Min Full Body Pre-Workout Stretch & Warm-Up', url: 'https://www.youtube.com/watch?v=ixZVPFJWnRY', dur: '~10 min' },
+    post: { title: 'Upper Body Cool Down & Stretch — Post Workout Mobility', url: 'https://www.youtube.com/watch?v=gLE3Ga3usdU', dur: '~10 min' },
+    exercises: [
+      { name: 'Pull-up Bar Work',            sets: 3, reps: 'Phase-based', eq: 'Pull-up Bar', rest: '2 min',  muscles: 'Lats · Biceps · Rear Delts', progression: 'pullup' },
+      { name: 'Seated Resistance Band Rows', sets: 4, reps: '10–12', eq: 'Band', rest: '90 sec', muscles: 'Mid Back · Biceps · Rear Delts',
+        setup: '🪢 Sit on the floor with legs extended, loop the band around your feet (or anchor it low). Hold one end in each hand, arms straight. Pull the band to your lower ribs, elbows driving back — squeeze your shoulder blades together at the end. Slowly return. Keep your torso upright; don\'t rock back and forth to generate momentum. Think "elbows to pockets."' },
+      { name: 'Dumbbell Bent-over Rows',     sets: 4, reps: '12',    eq: 'DB',   rest: '90 sec', muscles: 'Lats · Mid Back · Biceps',
+        setup: '🔽 Stand with feet hip-width, hinge at hips until torso is ~45° or more parallel to floor (more horizontal = more lat). Hold DBs below you, palms facing in. Row both up to your sides, leading with elbows — pull toward your hips, not your chest. Squeeze at the top, lower slowly. Keep your back flat and head neutral (don\'t crane your neck up). Brace your core like you\'re about to take a punch.' },
+      { name: 'Band Pull-Aparts',            sets: 3, reps: '15',    eq: 'Band', rest: '60 sec', muscles: 'Rear Delts · Upper Back',
+        setup: '↔️ Hold the band with both hands in front of you at shoulder height, arms straight, hands about shoulder-width apart. Pull the band apart by driving your arms out to the sides — squeeze your shoulder blades and rear delts at full extension. Return slowly with control. Stand tall, don\'t shrug. Use a band with enough tension that the last 3 reps are a challenge but form stays clean.' },
+      { name: 'Band Face Pulls',             sets: 3, reps: '15',    eq: 'Band', rest: '60 sec', muscles: 'Rear Delts · Rotator Cuff · Traps',
+        setup: '🎯 Anchor band at face/eye height. Grab both ends with an overhand grip, step back until there\'s tension. Pull the band toward your face — elbows flare out wide, hands end up beside your ears. Think "double bicep pose." Squeeze rear delts and upper back at the end. This protects your rotator cuff and is one of the most important exercises for long-term shoulder health. Don\'t rush it.' },
+      { name: 'Dumbbell Bicep Curls',        sets: 3, reps: '12',    eq: 'DB',   rest: '60 sec', muscles: 'Biceps (long head)',
+        setup: '💪 Stand tall, DBs at your sides, palms facing forward. Curl both up (or alternate) keeping your elbows pinned to your sides — they shouldn\'t swing forward. Squeeze at the top, lower slowly over 2–3 seconds. Supinate (rotate your wrist outward) as you curl for full bicep engagement. Don\'t rock your torso — if you need momentum to lift the weight, it\'s too heavy.' },
+      { name: 'Hammer Curls',                sets: 3, reps: '12',    eq: 'DB',   rest: '60 sec', muscles: 'Biceps · Brachialis · Forearms',
+        setup: '🔨 Same as bicep curls but palms face each other the whole time (neutral grip — like holding hammers). Curl one arm at a time or both together. Elbows stay at your sides. This hits the brachialis (muscle under the bicep that pushes it up) and forearms more than regular curls — great for arm thickness. Slow the negative (lowering) down for extra gains.' },
+    ]
+  },
+  Thursday: {
+    label: 'Lower + Abs', color: '#34D399', emoji: '🦵',
+    focus: 'Hamstrings · Glutes · Core', duration: '~75 min',
+    pre:  { title: '10 Min Full Body Pre-Workout Stretch & Warm-Up', url: 'https://www.youtube.com/watch?v=ixZVPFJWnRY', dur: '~10 min' },
+    post: { title: '5 Min Lower Body Cool Down Stretch Routine', url: 'https://www.youtube.com/watch?v=myN0dGpJabc', dur: '~5 min' },
+    exercises: [
+      { name: 'Dumbbell Lunges',          sets: 4, reps: '10 each', eq: 'DB',         rest: '90 sec', muscles: 'Quads · Glutes · Hamstrings',
+        setup: '👟 Stand tall, DBs at your sides. Step one foot forward and lower your back knee toward the floor — front knee stays over your ankle (not past your toes). Push through your front heel to return to standing, then switch legs. Keep your torso upright throughout — don\'t lean forward. Walk forward (walking lunges) or stay in place. Start light; balance is the challenge here.' },
+      { name: 'Step-ups on Bench w/ DB', sets: 3, reps: '12',      eq: 'DB + Bench', rest: '90 sec', muscles: 'Glutes · Quads · Calves',
+        setup: '🪜 Place one foot fully on the bench. Hold DBs at your sides. Drive through your front heel to step up — don\'t push off your back foot to cheat. Bring the back foot up to stand on the bench, then step back down. Complete all reps on one leg before switching. The slower and more controlled, the harder it is on the glutes. Bench height matters — higher = more glute activation.' },
+      { name: 'Sumo Squats w/ Dumbbell', sets: 3, reps: '15',      eq: 'DB',         rest: '60 sec', muscles: 'Inner Thighs · Glutes · Quads',
+        setup: '🦵 Stand with feet wider than shoulder-width, toes pointed out at ~45°. Hold one heavy DB vertically by one end between your legs (both hands on top end). Squat down — knees tracking over toes — until thighs are parallel or deeper. Drive through heels to stand. Keep chest up and back flat. The wide stance shifts work to your inner thighs and glutes more than a regular squat.' },
+      { name: 'Band Standing Kickbacks', sets: 3, reps: '15',      eq: 'Band',       rest: '60 sec', muscles: 'Glutes (all 3) · Hamstrings',
+        setup: '🍑 Anchor the band low (door anchor or under a heavy piece of furniture). Loop around one ankle. Stand facing the anchor, slight hinge at hips, hands on something for balance. Kick your looped leg straight back — squeeze your glute hard at the top. Control the return. Don\'t rotate your hips — keep them square to the wall the whole time. Slow reps work better than fast ones here.' },
+      { name: 'Bicycle Crunches',        sets: 3, reps: '20',      eq: 'Bodyweight', rest: '45 sec', muscles: 'Obliques · Upper & Lower Abs',
+        setup: '🚲 Lie on your back, hands behind your head (don\'t pull your neck!), knees lifted to 90°. Rotate your right elbow toward your left knee while extending the right leg — then switch. Move slow and deliberate, not fast and sloppy. The rotation comes from your torso, not your neck. Focus on your oblique contracting on each twist. 20 slow reps beats 40 fast ones every time.' },
+      { name: 'Mountain Climbers',       sets: 3, reps: '30 sec',  eq: 'Bodyweight', rest: '45 sec', muscles: 'Core · Hip Flexors · Shoulders',
+        setup: '🧗 Start in a high plank position — hands under shoulders, body in a straight line. Drive one knee toward your chest, then quickly switch legs — like running horizontally. Keep your hips low and level (don\'t let them bob up and down). Core stays braced the whole time. Slow mountain climbers = more core. Fast = more cardio. Either way, don\'t hold your breath.' },
+    ]
+  },
+  Friday: {
+    label: 'Full Upper', color: '#F59E0B', emoji: '💥',
+    focus: 'Strength Focus — Heavier', duration: '~90 min',
+    pre:  { title: '10 Min Full Body Pre-Workout Stretch & Warm-Up', url: 'https://www.youtube.com/watch?v=ixZVPFJWnRY', dur: '~10 min' },
+    post: { title: 'Upper Body Post-Workout Stretch — Neck, Shoulders, Chest, Back, Arms', url: 'https://www.youtube.com/watch?v=SnczdEkUBvg', dur: '~12 min' },
+    exercises: [
+      { name: 'Dumbbell Incline Press',   sets: 4, reps: '10',       eq: 'DB + Bench',  rest: '2 min',  muscles: 'Upper Chest · Front Delts · Triceps',
+        setup: '📐 Set the bench to a 30–45° incline (steeper than 45° starts working shoulders more than chest). Lie back, DBs at chest height, elbows at ~45° from your torso. Press up and slightly together — don\'t lock out aggressively at the top. Lower slowly to feel the stretch in your upper chest. This is a heavier strength day — take the full 2 min rest and add weight when you can hit all 10 reps cleanly.' },
+      { name: 'Dumbbell Rows',            sets: 4, reps: '10',       eq: 'DB',          rest: '2 min',  muscles: 'Lats · Mid Back · Biceps',
+        setup: '🗜️ Place one knee and same-side hand on the bench for support (or both DBs with hinged stance). Back flat and parallel to floor. Row the DB up to your hip/lower ribs — think "elbow to pocket." Don\'t twist or rotate your torso. At the top, squeeze your lat for a beat. Lower fully — let your arm extend to stretch the lat at the bottom. This is your heaviest back movement today; go heavier than Wednesday.' },
+      { name: 'Arnold Press',             sets: 3, reps: '10',       eq: 'DB',          rest: '90 sec', muscles: 'All 3 Delt Heads · Triceps',
+        setup: '🌀 Start with DBs at shoulder height, palms facing YOU (like the top of a bicep curl). As you press up, rotate your wrists outward so palms face forward at the top — full extension. Reverse the rotation as you lower back to start. This rotation is what hits all three delt heads. Go slightly lighter than your regular shoulder press; the rotation adds difficulty. Move slowly and controlled.' },
+      { name: 'Band Chest Flyes',         sets: 3, reps: '15',       eq: 'Band',        rest: '60 sec', muscles: 'Chest (inner) · Front Delts',
+        setup: '🦋 Anchor band behind you at chest height (door frame). Hold one end in each hand, step forward until there\'s tension. Arms out wide with a slight bend in elbows. Bring hands together in front of your chest in a hugging arc — squeeze your chest hard at the center. Slowly open back out. The key: keep that slight elbow bend fixed the whole time (don\'t turn it into a press). Feel the stretch in your chest at the open position.' },
+      { name: 'Pull-up Practice',         sets: 3, reps: 'Phase-based', eq: 'Pull-up Bar', rest: '2 min',  muscles: 'Lats · Biceps · Core', progression: 'pullup' },
+      { name: 'Dumbbell Skull Crushers', sets: 3, reps: '12',       eq: 'DB',          rest: '90 sec', muscles: 'Triceps (long head)',
+        setup: '💀 Lie flat on bench (or floor). Hold DBs directly above you, palms facing each other. Keeping your upper arms completely still and pointing at the ceiling, bend your elbows to lower the DBs toward your forehead/temples. Stop before they touch, then extend back up. The key: only your forearms move — upper arms stay vertical. Go lighter than you think. If your elbows are flaring wide, the weight is too heavy.' },
+    ]
+  },
+  Saturday: {
+    label: 'Arms + Abs', color: '#F472B6', emoji: '✨',
+    focus: 'Biceps · Triceps · Core', duration: '~60 min',
+    pre:  { title: '10 Min Full Body Pre-Workout Stretch & Warm-Up', url: 'https://www.youtube.com/watch?v=ixZVPFJWnRY', dur: '~10 min' },
+    post: { title: 'Post Workout Stretch: Biceps & Triceps', url: 'https://www.youtube.com/watch?v=I8hQpBI9vDM', dur: '~7 min' },
+    exercises: [
+      { name: 'Dumbbell Curl to Press',         sets: 3, reps: '10',     eq: 'DB',         rest: '60 sec', muscles: 'Biceps · Front Delts · Triceps',
+        setup: '🔄 Start with DBs at your sides. Curl both up to shoulder height (bicep curl), then immediately rotate and press overhead (shoulder press). Lower back down in reverse. It\'s two movements in one — the curl and the press. Keep the transitions smooth. You\'ll need lighter weight than your standalone curl or press since this is a combined movement. Great finisher or opener for arms day.' },
+      { name: 'Concentration Curls',            sets: 3, reps: '12',     eq: 'DB',         rest: '60 sec', muscles: 'Biceps (peak)',
+        setup: '🎯 Sit on the edge of the bench, legs apart. Rest your right elbow on the inside of your right thigh, arm hanging down holding a DB. Curl up — your thigh acts as a brace so NO swinging is possible. This isolates the bicep completely. Squeeze hard at the top and lower slowly. Switch arms. Don\'t lean into the curl — sit upright and let only your forearm move. This builds the "peak" of your bicep.' },
+      { name: 'Tricep Kickbacks',               sets: 3, reps: '12',     eq: 'DB',         rest: '60 sec', muscles: 'Triceps (lateral head)',
+        setup: '↩️ Hinge forward at hips, back flat, one hand on bench for support (or both DBs with free stance). Upper arm parallel to floor, elbow bent 90°. Extend your forearm back until arm is straight — squeeze your tricep hard. Slowly bend back to 90°. Your upper arm stays still and parallel to the floor the whole time — only the forearm moves. Use a lighter weight; these are harder than they look.' },
+      { name: 'Overhead Tricep Extension',      sets: 3, reps: '12',     eq: 'DB',         rest: '60 sec', muscles: 'Triceps (long head)',
+        setup: '☝️ Hold one DB with both hands overhead — grip the top end like a diamond shape. Stand or sit upright. Lower the DB behind your head by bending your elbows — feel the stretch in your triceps. Elbows stay close to your head, pointing forward (not flaring out). Press back up to full extension. This is the best stretch for the long head of the tricep. Keep your core tight so you don\'t arch your lower back.' },
+      { name: 'Band Bicep Curls',               sets: 3, reps: '15',     eq: 'Band',       rest: '45 sec', muscles: 'Biceps · Brachialis',
+        setup: '🎗️ Stand on the center of the band with feet hip-width apart, one end in each hand. Start with palms facing forward, arms at your sides. Curl both hands up toward your shoulders — keep elbows pinned to your sides. Squeeze at the top, lower slowly. The band creates more tension at the top of the movement (opposite of DBs), so you\'ll really feel the peak contraction. Great for a finishing pump.' },
+      { name: 'Crunches + Leg Raises + Plank', sets: 3, reps: 'Circuit', eq: 'Bodyweight', rest: '45 sec', muscles: 'Upper Abs · Lower Abs · Core',
+        setup: '🔁 This is a mini circuit — do all 3 back to back, then rest. Crunches (15 reps): lie on back, knees bent, hands behind head. Curl your upper body up — focus on squeezing abs, not pulling your neck. Leg Raises (15 reps): legs straight, raise from floor to 90°, lower slowly. Plank (30 sec): forearms down, body straight as a board. Rest 45 sec after the plank, then repeat.' },
+    ]
+  },
+  Sunday: {
+    label: 'Active Recovery', color: '#60B8FF', emoji: '🧘',
+    focus: 'Hip Mobility · Full Body Stretch', duration: '~35 min',
+    hipVideo:     { title: '12 Minute Hip Mobility Routine',         url: 'https://www.youtube.com/watch?v=jj2AAH6jbHk', dur: '~12 min', author: 'Bodyweight Warrior' },
+    stretchVideo: { title: '10 Minute Full Body Recovery Stretch',   url: 'https://www.youtube.com/watch?v=Lq-a6kww0b4', dur: '~10 min', author: 'Juice & Toya' },
+    sections: [
+      { title: 'Hip Mobility', duration: '15 min', moves: [
+        { name: '90/90 Hip Stretch',         hold: '60 sec each side' },
+        { name: 'Deep Squat Hold',           hold: '60 sec' },
+        { name: 'Hip Flexor Lunge Stretch',  hold: '45 sec each side' },
+        { name: 'Pigeon Pose',               hold: '60 sec each side' },
+        { name: 'Fire Hydrants',             hold: '15 reps each side' },
+      ]},
+      { title: 'Full Body Stretch', duration: '20 min', moves: [
+        { name: 'Cat-Cow',                         hold: '10 reps slow' },
+        { name: 'Thread the Needle',               hold: '45 sec each side' },
+        { name: "Child's Pose",                    hold: '60 sec' },
+        { name: 'Chest Opener / Doorway Stretch',  hold: '45 sec' },
+        { name: 'Lat Stretch Against Wall',        hold: '45 sec each side' },
+        { name: 'Hamstring Stretch',               hold: '60 sec each side' },
+        { name: 'Seated Spinal Twist',             hold: '45 sec each side' },
+      ]},
+    ]
+  }
+};
+
+const ALL_DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const DAY_ABBR  = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+// ── State ─────────────────────────────────────────────────
+let state = {
+  activeDay: ALL_DAYS[new Date().getDay()],
+  view: 'workout',
+  calYear: new Date().getFullYear(),
+  calMonth: new Date().getMonth(),
+  completed: {},
+  setLogs: {},               // { exKey: { checked: [], weights: [], reps: [] } }
+  expanded: {},
+  setupVisible: {},          // NEW: { exKey: boolean } - track setup visibility
+  resetConfirm: null,
+  workoutOverride: {},
+  prs: {},
+  prevWeights: {},
+  sessionStart: null,
+  sessionPaused: false,      // NEW: is timer paused?
+  sessionPausedAt: null,     // NEW: when was it paused
+  sessionElapsedBeforePause: 0, // NEW: elapsed ms before current pause
+  sessionDurations: {},      // NEW: { 'dateKey': elapsedSeconds }
+  sessionNotes: {},          // NEW: { 'dateKey': 'note text' }
+  volume: {},
+  progPBs: {},               // { 'exKey__peName': { value: N, unit: 'sec'|'reps', date: '...' } }
+};
+
+// ── Rest Timer ────────────────────────────────────────────
+let restTimer = { active: false, total: 0, remaining: 0, color: '#fff', interval: null, endTime: null };
+
+function requestNotificationPermission() {
+  if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission();
+  }
+}
+
+function playTimerBeep() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    // Three short beeps
+    [0, 0.25, 0.5].forEach(offset => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.frequency.value = 880;
+      osc.type = 'sine';
+      gain.gain.setValueAtTime(0.6, ctx.currentTime + offset);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + offset + 0.2);
+      osc.start(ctx.currentTime + offset);
+      osc.stop(ctx.currentTime + offset + 0.2);
+    });
+  } catch(e) {}
+}
+
+function fireTimerDoneAlert() {
+  playTimerBeep();
+  if (navigator.vibrate) navigator.vibrate([300, 100, 300, 100, 300]);
+  if ('Notification' in window && Notification.permission === 'granted') {
+    new Notification('Rest done! 💪', { body: 'Time for your next set.' });
+  }
+  // Show loud in-app banner — works even on iOS when returning to app
+  showTimerDoneBanner();
+}
+
+function showTimerDoneBanner() {
+  let banner = document.getElementById('timer-done-banner');
+  if (!banner) {
+    banner = document.createElement('div');
+    banner.id = 'timer-done-banner';
+    document.body.appendChild(banner);
+  }
+  banner.style.cssText = `
+    position:fixed;top:0;left:0;right:0;bottom:0;z-index:99999;
+    background:linear-gradient(135deg,#22c55e,#10b981);
+    color:#fff;font-family:'DM Sans',sans-serif;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    animation:timerFlash 0.6s ease;
+  `;
+  banner.innerHTML = `
+    <div style="font-size:80px;margin-bottom:16px;animation:pulse 1s infinite">💪</div>
+    <div style="font-size:32px;font-weight:900;letter-spacing:1px;margin-bottom:8px">REST DONE!</div>
+    <div style="font-size:18px;opacity:0.85;margin-bottom:40px">Time for your next set</div>
+    <button onclick="document.getElementById('timer-done-banner').remove()" style="background:rgba(0,0,0,0.25);border:2px solid rgba(255,255,255,0.5);border-radius:16px;color:#fff;font-size:20px;font-weight:900;padding:16px 48px;cursor:pointer;font-family:'DM Sans',sans-serif;letter-spacing:1px">
+      LET'S GO
+    </button>
+  `;
+  // No auto-dismiss — stays until tapped
+}
+
+// When user returns to the app, check if timer finished while away
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && restTimer.active) {
+    const remaining = Math.round((restTimer.endTime - Date.now()) / 1000);
+    if (remaining <= 0) {
+      clearInterval(restTimer.interval);
+      restTimer.active = false;
+      restTimer.remaining = 0;
+      fireTimerDoneAlert();
+      const el = document.getElementById('rest-timer-overlay');
+      if (el) el.remove();
+    }
+  }
+});
+
+function startRestTimer(seconds, color) {
+  if (restTimer.interval) clearInterval(restTimer.interval);
+  const endTime = Date.now() + seconds * 1000;
+  restTimer = { active: true, total: seconds, remaining: seconds, color: color || '#fff', interval: null, endTime };
+  showRestTimer();
+  restTimer.interval = setInterval(() => {
+    // Use real clock so timer stays accurate when app is backgrounded
+    const remaining = Math.round((restTimer.endTime - Date.now()) / 1000);
+    restTimer.remaining = Math.max(remaining, 0);
+    updateRestTimerUI();
+    if (restTimer.remaining <= 0) {
+      clearInterval(restTimer.interval);
+      restTimer.active = false;
+      fireTimerDoneAlert();
+      setTimeout(() => {
+        const el = document.getElementById('rest-timer-overlay');
+        if (el) el.remove();
+      }, 800);
+    }
+  }, 500);
+}
+
+function showRestTimer() {
+  let el = document.getElementById('rest-timer-overlay');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'rest-timer-overlay';
+    document.body.appendChild(el);
+  }
+  el.innerHTML = `
+    <div style="flex:1">
+      <div id="rest-timer-label">Rest</div>
+      <div id="rest-timer-count" style="color:${restTimer.color}">${restTimer.remaining}s</div>
+      <div id="rest-timer-bar"><div id="rest-timer-bar-fill" style="width:100%;background:${restTimer.color}"></div></div>
+    </div>
+    <div style="display:flex;gap:6px;flex-shrink:0">
+      <button onclick="addRestTime(-30)" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:8px;color:rgba(255,255,255,0.6);font-size:11px;font-weight:700;padding:5px 10px;cursor:pointer;font-family:'DM Sans',sans-serif">-30s</button>
+      <button onclick="addRestTime(30)" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:8px;color:rgba(255,255,255,0.6);font-size:11px;font-weight:700;padding:5px 10px;cursor:pointer;font-family:'DM Sans',sans-serif">+30s</button>
+    </div>
+    <button id="rest-timer-skip" onclick="skipRestTimer()">Skip ✕</button>`;
+}
+
+function updateRestTimerUI() {
+  const count = document.getElementById('rest-timer-count');
+  const fill = document.getElementById('rest-timer-bar-fill');
+  if (count) count.textContent = restTimer.remaining + 's';
+  if (fill) fill.style.width = (restTimer.remaining / restTimer.total * 100) + '%';
+  if (count && restTimer.remaining <= 5) count.style.color = '#ef4444';
+}
+
+function skipRestTimer() {
+  if (restTimer.interval) clearInterval(restTimer.interval);
+  restTimer.active = false;
+  const el = document.getElementById('rest-timer-overlay');
+  if (el) el.remove();
+}
+
+function addRestTime(sec) {
+  restTimer.endTime += sec * 1000;
+  restTimer.total += sec;
+  restTimer.remaining = Math.max(Math.round((restTimer.endTime - Date.now()) / 1000), 0);
+  if (restTimer.remaining <= 0) {
+    skipRestTimer();
+    return;
+  }
+  updateRestTimerUI();
+}
+
+// ── Session Timer (pauseable) ─────────────────────────────
+let sessionTimerInterval = null;
+
+function getSessionElapsed() {
+  // Returns elapsed seconds accounting for pauses
+  if (!state.sessionStart) return 0;
+  if (state.sessionPaused) return Math.floor(state.sessionElapsedBeforePause / 1000);
+  return Math.floor((state.sessionElapsedBeforePause + (Date.now() - state.sessionStart)) / 1000);
+}
+
+function startSessionTimer() {
+  if (!state.sessionStart) {
+    state.sessionStart = Date.now();
+    state.sessionElapsedBeforePause = 0;
+    state.sessionPaused = false;
+    saveSessionState();
+  }
+  if (sessionTimerInterval) clearInterval(sessionTimerInterval);
+  if (!state.sessionPaused) {
+    sessionTimerInterval = setInterval(updateSessionTimerUI, 1000);
+  }
+}
+
+function pauseSessionTimer() {
+  if (state.sessionPaused) {
+    // Resume
+    state.sessionStart = Date.now();
+    state.sessionPaused = false;
+    saveSessionState();
+    sessionTimerInterval = setInterval(updateSessionTimerUI, 1000);
+  } else {
+    // Pause
+    state.sessionElapsedBeforePause += Date.now() - (state.sessionStart || Date.now());
+    state.sessionPaused = true;
+    state.sessionStart = null;
+    saveSessionState();
+    if (sessionTimerInterval) clearInterval(sessionTimerInterval);
+  }
+  updateSessionTimerUI();
+  // Update pause button text without full re-render
+  const btn = document.getElementById('session-pause-btn');
+  if (btn) btn.textContent = state.sessionPaused ? '▶' : '⏸';
+}
+
+function updateSessionTimerUI() {
+  const el = document.getElementById('session-timer-val');
+  if (!el) return;
+  const elapsed = getSessionElapsed();
+  const m = Math.floor(elapsed / 60).toString().padStart(2,'0');
+  const s = (elapsed % 60).toString().padStart(2,'0');
+  el.textContent = m + ':' + s;
+}
+
+function getSessionTimerDisplay() {
+  const elapsed = getSessionElapsed();
+  if (!elapsed && !state.sessionStart && !state.sessionPaused) return '';
+  const m = Math.floor(elapsed / 60).toString().padStart(2,'0');
+  const s = (elapsed % 60).toString().padStart(2,'0');
+  return m + ':' + s;
+}
+
+function resetSessionTimer() {
+  state.sessionStart = Date.now();
+  state.sessionElapsedBeforePause = 0;
+  state.sessionPaused = false;
+  saveSessionState();
+  if (sessionTimerInterval) clearInterval(sessionTimerInterval);
+  sessionTimerInterval = setInterval(updateSessionTimerUI, 1000);
+  updateSessionTimerUI();
+  const btn = document.getElementById('session-pause-btn');
+  if (btn) btn.textContent = '⏸';
+}
+
+// ── Volume Tracking ───────────────────────────────────────
+function computeSessionVolume(dayName) {
+  const day = PLAN[dayName];
+  if (!day || !day.exercises) return 0;
+  let total = 0;
+  day.exercises.forEach(ex => {
+    if (ex.progression) return;
+    const k = exKey(dayName, ex.name);
+    const log = state.setLogs[k];
+    if (!log) return;
+    log.weights.forEach((w, i) => {
+      const lbs = parseFloat(w);
+      // Use actual reps logged, or fall back to target reps
+      const actualReps = log.reps && log.reps[i] ? parseInt(log.reps[i]) : null;
+      const targetReps = parseInt((ex.reps || '').toString().split('–')[0]) || 1;
+      const repsToUse = actualReps || targetReps;
+
+      if (!isNaN(lbs) && lbs > 0 && log.checked[i] && repsToUse > 0) {
+        total += lbs * repsToUse;
+      }
+    });
+  });
+  return Math.round(total);
+}
+
+// ── Stretch Timers ────────────────────────────────────────
+let stretchTimers = {}; // { id: { remaining, total, interval, done } }
+
+function startStretchTimer(id, seconds) {
+  if (stretchTimers[id] && stretchTimers[id].interval) {
+    clearInterval(stretchTimers[id].interval);
+  }
+  if (stretchTimers[id] && stretchTimers[id].done) {
+    // Reset
+    stretchTimers[id] = null;
+    updateStretchTimerBtn(id, seconds, false, false);
+    return;
+  }
+  stretchTimers[id] = { remaining: seconds, total: seconds, interval: null, done: false };
+  updateStretchTimerBtn(id, seconds, true, false);
+  stretchTimers[id].interval = setInterval(() => {
+    stretchTimers[id].remaining--;
+    if (stretchTimers[id].remaining <= 0) {
+      clearInterval(stretchTimers[id].interval);
+      stretchTimers[id].done = true;
+      if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+      updateStretchTimerBtn(id, 0, false, true);
+    } else {
+      updateStretchTimerBtn(id, stretchTimers[id].remaining, true, false);
+    }
+  }, 1000);
+}
+
+function updateStretchTimerBtn(id, val, running, done) {
+  const btn = document.getElementById('stimer-' + id);
+  if (!btn) return;
+  btn.className = 'stretch-timer-btn' + (running ? ' running' : '') + (done ? ' done' : '');
+  if (done) btn.textContent = '✓ Done — tap reset';
+  else if (running) btn.textContent = val + 's';
+  else btn.textContent = '▶ Start';
+}
+
+// ── PR Tracker ────────────────────────────────────────────
+function checkAndSavePR(k, weights) {
+  const nums = weights.map(w => parseFloat(w)).filter(n => !isNaN(n) && n > 0);
+  if (!nums.length) return false;
+  const maxThisSession = Math.max(...nums);
+  const existing = state.prs[k];
+  if (!existing || maxThisSession > existing.weight) {
+    state.prs[k] = { weight: maxThisSession, date: new Date().toLocaleDateString() };
+    try { localStorage.setItem(PR_KEY, JSON.stringify(state.prs)); } catch(e) {}
+    return true; // new PR!
+  }
+  return false;
+}
+
+function loadState() {
+  try { const c = localStorage.getItem(STORAGE_KEY); if (c) state.completed = JSON.parse(c); } catch(e) {}
+  try { const s = localStorage.getItem(SET_LOGS_KEY); if (s) state.setLogs = JSON.parse(s); } catch(e) {}
+  try { const o = localStorage.getItem(OVERRIDE_KEY); if (o) state.workoutOverride = JSON.parse(o); } catch(e) {}
+  try { const p = localStorage.getItem(PR_KEY); if (p) state.prs = JSON.parse(p); } catch(e) {}
+  try { const pw = localStorage.getItem(PREV_WEIGHTS_KEY); if (pw) state.prevWeights = JSON.parse(pw); } catch(e) {}
+  try { const dur = localStorage.getItem(SESSION_DURATIONS_KEY); if (dur) state.sessionDurations = JSON.parse(dur); } catch(e) {}
+  try { const notes = localStorage.getItem(SESSION_NOTES_KEY); if (notes) state.sessionNotes = JSON.parse(notes); } catch(e) {}
+  try { const vol = localStorage.getItem(VOLUME_KEY); if (vol) state.volume = JSON.parse(vol); } catch(e) {}
+  try { const pb = localStorage.getItem(PROG_PB_KEY); if (pb) state.progPBs = JSON.parse(pb); } catch(e) {}
+  try {
+    const ss = localStorage.getItem(SESSION_START_KEY);
+    if (ss) {
+      try {
+        const parsed = JSON.parse(ss);
+        if (parsed && typeof parsed === 'object') {
+          state.sessionStart = parsed.start || null;
+          state.sessionPaused = parsed.paused || false;
+          state.sessionElapsedBeforePause = parsed.elapsed || 0;
+        } else {
+          state.sessionStart = parseInt(ss) || null;
+        }
+      } catch(e2) {
+        state.sessionStart = parseInt(ss) || null;
+      }
+    }
+  } catch(e) {}
+}
+
+function saveCompleted() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state.completed)); } catch(e) {}
+}
+
+function saveSetLogs() {
+  try { localStorage.setItem(SET_LOGS_KEY, JSON.stringify(state.setLogs)); } catch(e) {}
+}
+
+function savePrevWeights() {
+  try { localStorage.setItem(PREV_WEIGHTS_KEY, JSON.stringify(state.prevWeights)); } catch(e) {}
+}
+
+function saveSessionStart() {
+  try {
+    if (state.sessionStart) localStorage.setItem(SESSION_START_KEY, state.sessionStart);
+    else localStorage.removeItem(SESSION_START_KEY);
+  } catch(e) {}
+}
+
+function saveSessionState() {
+  try {
+    localStorage.setItem(SESSION_START_KEY, JSON.stringify({
+      start: state.sessionStart,
+      paused: state.sessionPaused,
+      pausedAt: state.sessionPausedAt,
+      elapsed: state.sessionElapsedBeforePause
+    }));
+  } catch(e) {}
+}
+
+function saveDurations() {
+  try { localStorage.setItem(SESSION_DURATIONS_KEY, JSON.stringify(state.sessionDurations)); } catch(e) {}
+}
+
+function saveNotes() {
+  try { localStorage.setItem(SESSION_NOTES_KEY, JSON.stringify(state.sessionNotes)); } catch(e) {}
+}
+
+function saveProgPBs() {
+  try { localStorage.setItem(PROG_PB_KEY, JSON.stringify(state.progPBs)); } catch(e) {}
+}
+
+function checkProgPB(exKey, peName, value, unit) {
+  const pbKey = exKey + '__' + peName;
+  const existing = state.progPBs[pbKey];
+  if (!existing || value > existing.value) {
+    state.progPBs[pbKey] = { value, unit, date: new Date().toLocaleDateString() };
+    saveProgPBs();
+    return true;
+  }
+  return false;
+}
+
+function saveProgPB(exKey, peName, value, unit) {
+  checkProgPB(exKey, peName, parseFloat(value), unit);
+  render();
+}
+
+function advanceProgPhase(type) {
+  const prog = getProgressionPhase(type);
+  const phases = type === 'pullup' ? PULLUP_PHASES : PUSHUP_PHASES;
+  if (prog.phaseIndex < phases.length - 1) {
+    // Store a manual phase override — adds enough "virtual" sessions to push into next phase
+    const key = type === 'pullup' ? 'natalia-pullup-phase-override' : 'natalia-pushup-phase-override';
+    const newPhase = prog.phaseIndex + 1;
+    try { localStorage.setItem(key, newPhase.toString()); } catch(e) {}
+    render();
+  }
+}
+
+function saveVolume() {
+  try { localStorage.setItem(VOLUME_KEY, JSON.stringify(state.volume)); } catch(e) {}
+}
+
+function saveOverride() {
+  try { localStorage.setItem(OVERRIDE_KEY, JSON.stringify(state.workoutOverride)); } catch(e) {}
+}
+
+// ── Helpers ───────────────────────────────────────────────
+function dateKey(d) { return d.getFullYear()+'-'+d.getMonth()+'-'+d.getDate(); }
+function todayKey() { return dateKey(new Date()); }
+function todayDayName() { return ALL_DAYS[new Date().getDay()]; }
+function exKey(dayName, exName) { return dayName + '__' + exName; }
+
+function getLog(dayName, exName, sets) {
+  const k = exKey(dayName, exName);
+  return state.setLogs[k] || { checked: Array(sets).fill(false), weights: Array(sets).fill(''), reps: Array(sets).fill('') };
+}
+
+// ── Render ────────────────────────────────────────────────
+function render() {
+  document.getElementById('app').innerHTML = buildApp();
+}
+
+function buildApp() {
+  const td = todayDayName();
+  const tData = PLAN[td];
+  const tColor = tData ? tData.color : '#60B8FF';
+  const tEmoji = tData ? tData.emoji : '🧘';
+  const tLabel = tData ? tData.label : 'Active Recovery';
+  const tFocus = tData ? tData.focus : 'Hip Mobility · Full Body Stretch';
+  const tComplete = !!state.completed[todayKey()];
+
+  return `
+  <div class="header">
+    <div class="header-eyebrow">7-Day Program</div>
+    <div class="header-title">WORKOUT TRACKER</div>
+    <div class="header-sub">Upper body priority · Calisthenics + Dumbbells + Bands</div>
+    <div class="save-badge">
+      <div class="save-dot"></div>
+      <span class="save-label">Progress saves automatically</span>
+    </div>
+    <div class="today-banner" style="background:${tColor}18;border:1px solid ${tColor}40" onclick="goToToday()">
+      <span style="font-size:18px">${tEmoji}</span>
+      <div>
+        <div style="font-size:10px;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:1px">Today</div>
+        <div style="font-size:14px;font-weight:700;color:${tColor}">${tLabel} · ${tFocus}</div>
+      </div>
+      ${tComplete ? '<span style="font-size:16px">✅</span>' : ''}
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn ${state.view==='workout'?'active':''}" onclick="setView('workout')">💪&nbsp; Workout</button>
+    <button class="tab-btn ${state.view==='calendar'?'active':''}" onclick="setView('calendar')">📅&nbsp; Calendar</button>
+    <button class="tab-btn ${state.view==='stats'?'active':''}" onclick="setView('stats')">📈&nbsp; Stats</button>
+  </div>
+
+  <div class="content">
+    ${state.view === 'calendar' ? buildCalendar() : state.view === 'stats' ? buildStatsTab() : buildWorkoutTab()}
+  </div>`;
+}
+
+// ── Workout tab ───────────────────────────────────────────
+function buildWorkoutTab() {
+  const pills = ALL_DAYS.map(d => {
+    const c = d==='Sunday' ? '#60B8FF' : PLAN[d].color;
+    const active = d === state.activeDay;
+    return `<button class="day-pill${active?' active':''}"
+      style="${active ? `background:${c};box-shadow:0 4px 20px ${c}55;border:none` : ''}"
+      onclick="setDay('${d}')">${d}</button>`;
+  }).join('');
+
+  // Start session timer when on workout tab
+  if (!state.sessionStart) {
+    state.sessionStart = Date.now();
+    saveSessionStart();
+  }
+  setTimeout(startSessionTimer, 0);
+
+  const content = state.activeDay === 'Sunday' ? buildSunday() : buildWorkoutDay(state.activeDay);
+  return `<div class="day-pills">${pills}</div><div>${content}</div>`;
+}
+
+function buildWorkoutDay(dayName) {
+  const todayDateKey = todayKey();
+  const planDay = (state.activeDay === todayDayName() && state.workoutOverride[todayDateKey]) || dayName;
+  const day = PLAN[planDay];
+  const c = day.color;
+  const complete = !!state.completed[todayKey()];
+  const isOverridden = planDay !== dayName;
+
+  const hasAnyLog = day.exercises.some(ex => {
+    const log = state.setLogs[exKey(planDay, ex.name)];
+    if (!log) return false;
+    return log.checked.some(Boolean) || log.weights.some(w => w !== '');
+  });
+
+  const isConfirming = state.resetConfirm === planDay;
+
+  // Swap selector — other workout days only (not Sunday)
+  const swapOptions = ALL_DAYS.filter(d => d !== 'Sunday').map(d => {
+    const selected = planDay === d ? 'selected' : '';
+    return `<option value="${d}" ${selected}>${d} — ${PLAN[d].label}</option>`;
+  }).join('');
+
+  return `
+  <div class="day-header" style="background:linear-gradient(135deg,${c}18,${c}06);border:1px solid ${c}30">
+    <div class="day-header-inner">
+      <span class="day-emoji">${day.emoji}</span>
+      <div>
+        <div class="day-title" style="color:${c}">${day.label}</div>
+        <div class="day-focus">${day.focus}</div>
+      </div>
+      <div class="day-badges">
+        <div class="badge" style="background:${c}22;color:${c}">${day.exercises.length} exercises</div>
+        <div class="badge badge-time">⏱ ${day.duration}</div>
+      </div>
+    </div>
+
+    <div style="margin-top:12px">
+      <div style="font-size:10px;letter-spacing:2px;color:rgba(255,255,255,0.3);text-transform:uppercase;margin-bottom:6px">
+        ${isOverridden ? '🔀 Doing a different workout today' : '📋 Swap today\'s workout'}
+      </div>
+      <select onchange="setWorkoutOverride('${dayName}', this.value)"
+        style="width:100%;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:#fff;font-size:13px;font-weight:600;padding:9px 12px;outline:none;cursor:pointer;appearance:none;-webkit-appearance:none;font-family:'DM Sans',sans-serif">
+        ${swapOptions}
+      </select>
+      ${isOverridden ? `<div style="font-size:11px;color:rgba(255,255,255,0.35);margin-top:5px;text-align:center">
+        Showing <b style="color:${c}">${planDay}</b> workout on <b style="color:#fff">${dayName}</b>
+        &nbsp;·&nbsp; <span onclick="clearOverride('${dayName}')" style="color:rgba(255,100,100,0.7);cursor:pointer;text-decoration:underline">Reset</span>
+      </div>` : ''}
+    </div>
+
+    <div id="session-timer" style="margin-top:10px">
+      <div id="session-timer-dot" style="${state.sessionPaused ? 'background:#F59E0B;animation:none' : ''}"></div>
+      <span style="font-size:10px;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:1px">${state.sessionPaused ? 'Paused' : 'Session'}</span>
+      <span id="session-timer-val" style="font-size:13px;font-weight:700;color:rgba(255,255,255,0.7)">${getSessionTimerDisplay() || '00:00'}</span>
+      <button id="session-pause-btn" onclick="pauseSessionTimer()" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:6px;color:rgba(255,255,255,0.5);font-size:11px;cursor:pointer;padding:2px 8px;font-family:'DM Sans',sans-serif;margin-left:4px">${state.sessionPaused ? '▶' : '⏸'}</button>
+      <button onclick="resetSessionTimer()" style="background:none;border:none;color:rgba(255,255,255,0.2);font-size:10px;cursor:pointer;padding:0 0 0 4px;font-family:'DM Sans',sans-serif">↺</button>
+    </div>
+
+    <button class="complete-btn${complete?' done':''}" onclick="toggleToday()">
+      ${complete ? '✅ Logged — tap to undo' : "✅ Mark today's session complete"}
+    </button>
+    ${hasAnyLog ? `<button class="reset-btn${isConfirming?' confirm':''}" onclick="handleReset('${planDay}')">
+      ${isConfirming ? '⚠ Tap again to confirm reset' : '🔄 Reset today\'s set logs'}
+    </button>` : ''}
+  </div>
+
+  ${buildTodayStats(planDay)}
+
+  ${day.pre ? buildVideoCard(day.pre, 'pre') : ''}
+  ${day.exercises.map(ex => buildExercise(ex, planDay, c)).join('')}
+
+  <div class="notes-label">Session Notes</div>
+  <textarea id="session-notes-area" class="notes-area" rows="3" placeholder="How did this session feel? Any PRs? Notes for next time..."
+    oninput="saveNoteForDay('${planDay}')">${state.sessionNotes[planDay] || ''}</textarea>
+
+  ${day.post ? buildVideoCard(day.post, 'post') : ''}
+
+  <div class="tips-card">
+    <div class="tips-title">💡 Tips</div>
+    <div class="tips-text">
+      • Add weight when you hit the <b>top of the rep range</b> with clean form<br>
+      • Rest <b>60–90 sec</b> for toning, <b>2 min</b> for strength sets<br>
+      • Use the swap menu above to do a different day's workout any time
+    </div>
+  </div>`;
+}
+
+function buildExercise(ex, dayName, color) {
+  const k = exKey(dayName, ex.name);
+  const open = !!state.expanded[k];
+
+  // ── Progression exercise (pull-up or push-up phase work) ──
+  if (ex.progression) {
+    const prog = getProgressionPhase(ex.progression);
+    const phases = ex.progression === 'pullup' ? PULLUP_PHASES : PUSHUP_PHASES;
+    const phase = phases[prog.phaseIndex];
+    const pc = phase.color;
+
+    // set log uses phase exercise count
+    const phaseExCount = phase.exercises.length;
+    // log sizing handled below after phaseSetCounts computed; use placeholder here
+    const doneSets = (() => {
+      const l = state.setLogs[k];
+      return l ? l.checked.filter(Boolean).length : 0;
+    })();
+    // Done when ANY single phase exercise has all its sets complete (user does one per day)
+    const _psc = phase.exercises.map(pe => parseInt(pe.sets) || 3);
+    const _fl = state.setLogs[k];
+    const allDone = _fl ? phase.exercises.some((pe, exIdx) => {
+      const offset = _psc.slice(0, exIdx).reduce((a, b) => a + b, 0);
+      const numSets = _psc[exIdx];
+      return Array.from({length: numSets}, (_, s) => _fl.checked[offset + s]).every(Boolean);
+    }) : false;
+
+    const bg = allDone ? 'rgba(34,197,94,0.06)' : `rgba(${pc === '#60B8FF' ? '96,184,255' : pc === '#A78BFA' ? '167,139,250' : pc === '#34D399' ? '52,211,153' : pc === '#F59E0B' ? '245,158,11' : '255,107,53'},0.06)`;
+    const border = allDone ? '1px solid rgba(34,197,94,0.25)' : `1px solid ${pc}40`;
+
+    // Phase progress dots
+    const phaseDots = phases.map((p, i) => {
+      const done = i < prog.phaseIndex;
+      const cur = i === prog.phaseIndex;
+      return `<div style="flex:1;height:3px;border-radius:2px;background:${done ? p.color : (cur ? p.color+'99' : 'rgba(255,255,255,0.1)')}"></div>`;
+    }).join('');
+
+    // Session dots within phase
+    const sessionDots = Array.from({length: prog.sessionsPerPhase}, (_, i) => {
+      const filled = i < prog.sessionsIntoPhase;
+      return `<div style="width:7px;height:7px;border-radius:50%;background:${filled ? pc : 'rgba(255,255,255,0.12)'};border:1px solid ${filled ? pc : 'rgba(255,255,255,0.2)'}"></div>`;
+    }).join('');
+
+    const nextMsg = prog.phaseIndex < phases.length - 1
+      ? `${prog.sessionsUntilNext} session${prog.sessionsUntilNext !== 1 ? 's' : ''} to Phase ${prog.phaseIndex + 2}`
+      : '🏆 Final Phase';
+
+    const typeLabel = ex.progression === 'pullup' ? '🏋️ Pull-up' : '💪 Push-up';
+
+    // Phase exercise rows — each with full per-set logging stored flat in one log key
+    // Layout: [ex0_set0, ex0_set1, ..., ex1_set0, ex1_set1, ...]
+    const phaseSetCounts = phase.exercises.map(pe => parseInt(pe.sets) || 3);
+    const totalPhaseSets = phaseSetCounts.reduce((a, b) => a + b, 0);
+
+    // Last session preview for progression exercise
+    const progLastSession = buildLastSessionPreview(dayName, ex.name, totalPhaseSets, pc);
+    if (!state.setLogs[k] || state.setLogs[k].checked.length !== totalPhaseSets) {
+      state.setLogs[k] = { checked: Array(totalPhaseSets).fill(false), weights: Array(totalPhaseSets).fill(''), reps: Array(totalPhaseSets).fill('') };
+      saveSetLogs();
+    }
+    const flatLog = state.setLogs[k];
+    const doneFlat = flatLog.checked.filter(Boolean).length;
+
+    const doneExCount = phase.exercises.filter((pe, exIdx) => {
+      const offset = phaseSetCounts.slice(0, exIdx).reduce((a, b) => a + b, 0);
+      const numSets = phaseSetCounts[exIdx];
+      return Array.from({length: numSets}, (_, s) => flatLog.checked[offset + s]).every(Boolean);
+    }).length;
+    const progressBadge = allDone
+      ? '<span class="ex-badge-done">✓ done</span>'
+      : (doneExCount > 0 ? `<span class="ex-badge-progress" style="color:${pc}">${doneExCount}/${phaseExCount} exercises</span>` : '');
+
+    const progQuickCompleteBtn = '';
+
+    const phaseExRows = phase.exercises.slice(0, 1).map((pe, exIdx) => {
+      const offset = phaseSetCounts.slice(0, exIdx).reduce((a, b) => a + b, 0);
+      const numSets = phaseSetCounts[exIdx];
+
+      // Master weight selector for this phase exercise
+      const peMasterWeightSelector = buildMasterWeightSelector(`${k}-ex${exIdx}`, numSets, ex.eq);
+
+      const setRows = Array.from({length: numSets}, (_, s) => {
+        const fi = offset + s;
+        const checked = flatLog.checked[fi] || false;
+        const weight = (flatLog.weights[fi] || '').replace(/"/g, '&quot;');
+
+        // Small override button for individual set weight changes
+        const hasWeightSelector = ex.eq && (ex.eq.includes('DB') || ex.eq.toLowerCase().includes('band'));
+        const overrideBtn = hasWeightSelector ? `<button class="weight-override-btn" onclick="toggleSetWeightPicker('${k}',${fi})" title="Change weight for this set">↻</button>` : '';
+
+        const pickerButtons = hasWeightSelector ? (ex.eq.toLowerCase().includes('band')
+          ? BAND_COLORS.map(b => `<button class="weight-btn" style="border-color:${b.hex};color:${b.hex}" onclick="setIndividualWeight('${k}',${fi},'${b.value}')"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${b.hex};margin-right:4px;vertical-align:middle"></span>${b.label}</button>`).join('')
+          : DB_WEIGHTS.map(w => `<button class="weight-btn" onclick="setIndividualWeight('${k}',${fi},${w})">${w}</button>`).join('')
+        ) : '';
+
+        const picker = hasWeightSelector ? `<div id="set-picker-${k}-${fi}" class="set-weight-picker">${pickerButtons}</div>` : '';
+
+        // Auto-fill with target reps from phase exercise
+        const targetReps = parseInt((pe.reps || '').toString().split('–')[0]) || '';
+        const reps = (flatLog.reps && flatLog.reps[fi]) || targetReps;
+
+        return `<div class="set-row" style="margin-top:5px">
+          <button class="set-check${checked ? ' checked' : ''}" onclick="toggleSet('${k}',${fi},this)">${checked ? '✓' : ''}</button>
+          <span class="set-label">Set ${s + 1}</span>
+          <div class="set-input-group">
+            <input id="weight-input-${k}-${fi}" class="set-input set-input-small" type="text" placeholder="lbs" value="${weight}"
+              onchange="updateWeight('${k}',${fi},this.value)" oninput="updateWeight('${k}',${fi},this.value)" />
+            <input id="reps-input-${k}-${fi}" class="set-input set-input-small" type="number" placeholder="reps" value="${reps}"
+              onchange="updateReps('${k}',${fi},this.value)" oninput="updateReps('${k}',${fi},this.value)" />
+            <div class="reps-controls">
+              <button class="reps-arrow" onclick="adjustReps('${k}',${fi},1)">▲</button>
+              <button class="reps-arrow" onclick="adjustReps('${k}',${fi},-1)">▼</button>
+            </div>
+          </div>
+          ${overrideBtn}
+        </div>${picker}`;
+      }).join('');
+
+      const peAllDone = Array.from({length: numSets}, (_, s) => flatLog.checked[offset + s]).every(Boolean);
+      const peBg = peAllDone ? 'rgba(34,197,94,0.08)' : 'rgba(255,255,255,0.04)';
+      const peBorder = peAllDone ? '1px solid rgba(34,197,94,0.35)' : '1px solid rgba(255,255,255,0.08)';
+      const peDoneBadge = peAllDone ? '<span style="font-size:11px;font-weight:700;color:#22c55e;margin-left:6px">✓ done</span>' : '';
+
+      return `
+      <div style="background:${peBg};border:${peBorder};border-radius:10px;padding:10px 12px;margin-bottom:6px;transition:all 0.3s">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px">
+          <div style="display:flex;align-items:center;gap:4px">
+            <span style="font-size:13px;font-weight:600;color:${peAllDone ? '#22c55e' : '#fff'}">${pe.name}</span>
+            ${peDoneBadge}
+          </div>
+          <span style="font-size:11px;font-weight:700;background:${pc}22;color:${pc};border-radius:8px;padding:2px 9px;flex-shrink:0;margin-left:8px">${pe.sets} × ${pe.reps}</span>
+        </div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.38);margin-bottom:4px">💡 ${pe.note}</div>
+        ${peMasterWeightSelector}
+        ${setRows}
+      </div>`;
+    }).join('');
+
+    return `
+  <div class="exercise-card" style="background:${bg};border:${border}">
+    <div class="exercise-header">
+      <div style="flex:1" onclick="toggleExercise('${k}')">
+        <div class="exercise-name-row">
+          <span class="exercise-name">${ex.name}</span>
+          ${progressBadge}
+        </div>
+        <div class="exercise-tags">
+          <span class="tag" style="background:${pc}22;color:${pc}">Phase ${phase.phase} — ${phase.label}</span>
+          <span class="tag tag-muted">${ex.eq}</span>
+          <span class="tag tag-muted">rest ${ex.rest}</span>
+          ${ex.muscles ? `<span class="tag tag-muted tag-target" style="color:rgba(255,255,255,0.55)" onclick="event.stopPropagation();openMuscleModal('${ex.name.replace(/'/g,"\\'")}','${ex.muscles}')">🎯 ${ex.muscles}</span>` : ''}
+        </div>
+      </div>
+      <div class="exercise-quick-actions">
+        <button class="quick-action-btn" onclick="event.stopPropagation();copyLastWeek('${k}',${totalPhaseSets})" title="Copy last session's weights">📋</button>
+        <button class="quick-action-btn" onclick="event.stopPropagation();skipExercise('${k}')" title="Skip this exercise">⏭️</button>
+      </div>
+      <span class="chevron" onclick="toggleExercise('${k}')" style="cursor:pointer;padding:0 8px">${open ? '▲' : '▼'}</span>
+    </div>
+    <div id="sets-${k}" style="display:${open ? 'flex' : 'none'};flex-direction:column;gap:0;margin-top:12px">
+      <div style="display:flex;gap:3px;margin-bottom:8px">${phaseDots}</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <div style="display:flex;gap:5px;align-items:center">${sessionDots}</div>
+        <div style="font-size:11px;font-weight:600;color:${pc}">Session ${prog.sessionsIntoPhase + 1} of ${prog.sessionsPerPhase}</div>
+      </div>
+      <div style="font-size:10px;color:rgba(255,255,255,0.28);margin-bottom:10px">${nextMsg}</div>
+      ${prog.sessionsUntilNext === 0 && prog.phaseIndex < phases.length - 1 ? `
+        <button onclick="advanceProgPhase('${ex.progression}')" style="width:100%;background:rgba(34,197,94,0.12);border:1px solid rgba(34,197,94,0.4);border-radius:10px;color:#22c55e;font-size:13px;font-weight:700;padding:10px;cursor:pointer;margin-bottom:10px;font-family:'DM Sans',sans-serif">
+          🚀 Ready to advance → Phase ${prog.phaseIndex + 2}
+        </button>` : ''}
+      ${progLastSession}
+      ${progQuickCompleteBtn}
+      ${phaseExRows}
+      ${(() => {
+        const pe = phase.exercises[0];
+        const pbKey = k + '__' + pe.name;
+        const pb = state.progPBs[pbKey];
+        const unit = pe.reps && pe.reps.includes('sec') ? 'sec' : 'reps';
+        const pbDisplay = pb ? `<span style="color:${pc};font-weight:700">🏆 Best: ${pb.value}${unit} <span style="font-size:9px;opacity:0.5">${pb.date}</span></span>` : `<span style="color:rgba(255,255,255,0.3)">No PB yet</span>`;
+        return `<div style="display:flex;align-items:center;gap:8px;margin-top:6px;margin-bottom:4px;padding:8px 10px;background:rgba(255,255,255,0.03);border-radius:8px;border:1px solid rgba(255,255,255,0.07)">
+          <div style="font-size:11px;flex:1">${pbDisplay}</div>
+          <input type="number" id="prog-pb-input-${k}" placeholder="Log PB (${unit})" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:7px;padding:5px 9px;color:#fff;font-size:12px;width:120px;outline:none;font-family:'DM Sans',sans-serif" />
+          <button onclick="saveProgPB('${k}','${pe.name.replace(/'/g,"\\'")}',document.getElementById('prog-pb-input-${k}').value,'${unit === 'sec' ? 'sec' : 'reps'}')" style="background:${pc}22;border:1px solid ${pc}55;border-radius:7px;color:${pc};font-size:11px;font-weight:700;padding:5px 10px;cursor:pointer;font-family:'DM Sans',sans-serif">Save</button>
+        </div>`;
+      })()}
+      ${phase.exercises.length > 1 ? `<div style="font-size:11px;color:rgba(255,255,255,0.25);margin-top:4px;margin-bottom:6px">Next up: ${phase.exercises.slice(1).map(e => e.name).join(' → ')}</div>` : ''}
+      <div style="background:${pc}10;border-left:3px solid ${pc};border-radius:0 8px 8px 0;padding:8px 11px;margin-top:4px">
+        <div style="font-size:10px;color:${pc};font-weight:700;margin-bottom:2px">Coach note</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.45);line-height:1.6">${phase.tip}</div>
+      </div>
+    </div>
+  </div>`;
+  }
+
+  // ── Standard exercise ──
+  const log = getLog(dayName, ex.name, ex.sets);
+  const doneSets = log.checked.filter(Boolean).length;
+  const allDone = doneSets === ex.sets;
+
+  const bg = allDone ? 'rgba(34,197,94,0.06)' : 'rgba(255,255,255,0.05)';
+  const border = allDone ? '1px solid rgba(34,197,94,0.25)' : '1px solid rgba(255,255,255,0.08)';
+
+  const progressBadge = allDone
+    ? '<span class="ex-badge-done">✓ done</span>'
+    : (doneSets > 0 ? `<span class="ex-badge-progress" style="color:${color}">${doneSets}/${ex.sets}</span>` : '');
+
+  const prevW = state.prevWeights[k] || [];
+  const prInfo = state.prs[k];
+
+  // Last session preview
+  const lastSessionPreview = buildLastSessionPreview(dayName, ex.name, ex.sets, color);
+
+  // Master weight selector (shows once at top)
+  const masterWeightSelector = buildMasterWeightSelector(k, ex.sets, ex.eq);
+
+  // Quick complete button
+  const allSetsComplete = log.checked.every(Boolean);
+  const quickCompleteBtn = !allSetsComplete ? `
+    <button onclick="markAllSetsComplete('${k}',${ex.sets})" style="width:100%;background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.25);border-radius:10px;color:#22c55e;font-size:12px;font-weight:600;padding:8px;cursor:pointer;margin-bottom:10px;font-family:'DM Sans',sans-serif;transition:all 0.2s">
+      ✅ Mark all ${ex.sets} sets complete
+    </button>` : '';
+
+  const sets = Array.from({length: ex.sets}, (_, s) => {
+    const checked = log.checked[s] || false;
+    const weight = (log.weights[s] || '').replace(/"/g, '&quot;');
+    const hint = (!weight && prevW[s]) ? prevW[s] : '';
+
+    // Small override button for individual set weight changes
+    const hasWeightSelector = ex.eq && (ex.eq.includes('DB') || ex.eq.toLowerCase().includes('band'));
+    const overrideBtn = hasWeightSelector ? `<button class="weight-override-btn" onclick="toggleSetWeightPicker('${k}',${s})" title="Change weight for this set">↻</button>` : '';
+
+    const pickerButtons = hasWeightSelector ? (ex.eq.toLowerCase().includes('band')
+      ? BAND_COLORS.map(b => `<button class="weight-btn" style="border-color:${b.hex};color:${b.hex}" onclick="setIndividualWeight('${k}',${s},'${b.value}')"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${b.hex};margin-right:4px;vertical-align:middle"></span>${b.label}</button>`).join('')
+      : DB_WEIGHTS.map(w => `<button class="weight-btn" onclick="setIndividualWeight('${k}',${s},${w})">${w}</button>`).join('')
+    ) : '';
+
+    const picker = hasWeightSelector ? `<div id="set-picker-${k}-${s}" class="set-weight-picker">${pickerButtons}</div>` : '';
+
+    // Auto-fill with target reps if not already set
+    const targetReps = parseInt((ex.reps || '').toString().split('–')[0]) || '';
+    const reps = (log.reps && log.reps[s]) || targetReps;
+
+    return `<div class="set-row">
+      <button class="set-check${checked?' checked':''}" onclick="toggleSet('${k}',${s},this)">${checked?'✓':''}</button>
+      <span class="set-label">Set ${s+1}</span>
+      <div class="set-input-group">
+        <input id="weight-input-${k}-${s}" class="set-input set-input-small" type="text" placeholder="${hint || (ex.eq && ex.eq.toLowerCase().includes('band') ? 'band' : 'lbs')}" value="${weight}"
+          onchange="updateWeight('${k}',${s},this.value)" oninput="updateWeight('${k}',${s},this.value)" />
+        <input id="reps-input-${k}-${s}" class="set-input set-input-small" type="number" placeholder="reps" value="${reps}"
+          onchange="updateReps('${k}',${s},this.value)" oninput="updateReps('${k}',${s},this.value)" />
+        <div class="reps-controls">
+          <button class="reps-arrow" onclick="adjustReps('${k}',${s},1)">▲</button>
+          <button class="reps-arrow" onclick="adjustReps('${k}',${s},-1)">▼</button>
+        </div>
+      </div>
+      ${overrideBtn}
+    </div>${picker}`;
+  }).join('');
+  const prBadge = prInfo ? `<span class="pr-badge">🏆 PR: ${prInfo.weight} lbs</span>` : '';
+
+  return `
+  <div class="exercise-card" style="background:${bg};border:${border}">
+    <div class="exercise-header">
+      <div style="flex:1" onclick="toggleExercise('${k}')">
+        <div class="exercise-name-row">
+          <span class="exercise-name">${ex.name}</span>
+          ${progressBadge}
+          ${prBadge}
+        </div>
+        <div class="exercise-tags">
+          <span class="tag" style="background:${color}22;color:${color}">${ex.sets} sets × ${ex.reps}</span>
+          <span class="tag tag-muted">${ex.eq}</span>
+          <span class="tag tag-muted">rest ${ex.rest}</span>
+          ${ex.muscles ? `<span class="tag tag-muted tag-target" style="color:rgba(255,255,255,0.55)" onclick="event.stopPropagation();openMuscleModal('${ex.name.replace(/'/g,"\\'")}','${ex.muscles}')">🎯 ${ex.muscles}</span>` : ''}
+        </div>
+      </div>
+      <div class="exercise-quick-actions">
+        <button class="quick-action-btn" onclick="event.stopPropagation();copyLastWeek('${k}',${ex.sets})" title="Copy last session's weights">📋</button>
+        <button class="quick-action-btn" onclick="event.stopPropagation();skipExercise('${k}')" title="Skip this exercise">⏭️</button>
+      </div>
+      <span class="chevron" onclick="toggleExercise('${k}')" style="cursor:pointer;padding:0 8px">${open ? '▲' : '▼'}</span>
+    </div>
+    <div id="sets-${k}" style="display:${open?'flex':'none'};flex-direction:column;gap:6px;margin-top:10px">
+      ${lastSessionPreview}
+      ${ex.setup ? `<div style="margin-bottom:8px">
+        <button onclick="toggleSetup('${k}')" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:8px 12px;color:rgba(255,255,255,0.5);font-size:11px;font-weight:600;cursor:pointer;width:100%;text-align:left;display:flex;align-items:center;justify-content:space-between;font-family:'DM Sans',sans-serif">
+          <span>👁️ ${state.setupVisible[k] ? 'Hide' : 'Show'} setup & cues</span>
+          <span style="font-size:10px">${state.setupVisible[k] ? '▲' : '▼'}</span>
+        </button>
+        <div id="setup-${k}" style="display:${state.setupVisible[k] ? 'block' : 'none'};background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.09);border-radius:10px;padding:11px 13px;margin-top:6px">
+          <div style="font-size:10px;letter-spacing:2px;color:rgba(255,255,255,0.3);text-transform:uppercase;margin-bottom:6px">Setup &amp; Cues</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.55);line-height:1.8">${ex.setup}</div>
+        </div>
+      </div>` : ''}
+      ${masterWeightSelector}
+      ${quickCompleteBtn}
+      ${sets}
+    </div>
+  </div>`;
+}
+
+function buildVideoCard(video, type) {
+  const isPre = type === 'pre';
+  const bg      = isPre ? 'rgba(34,197,94,0.08)' : 'rgba(255,40,40,0.08)';
+  const border  = isPre ? '1px solid rgba(34,197,94,0.2)' : '1px solid rgba(255,40,40,0.2)';
+  const iconBg  = isPre ? 'rgba(34,197,94,0.15)' : 'rgba(255,40,40,0.15)';
+  const labelColor = isPre ? 'rgba(34,197,94,0.9)' : 'rgba(255,80,80,0.9)';
+  const label   = isPre ? 'Pre-Workout Warm-Up' : 'Post-Workout Stretch';
+  const icon    = isPre ? '🔥' : '▶';
+  const authorStr = video.author ? ` · ${video.author}` : '';
+  return `
+  <a href="${video.url}" target="_blank" rel="noopener noreferrer">
+    <div class="video-card" style="background:${bg};border:${border}">
+      <div class="video-icon" style="background:${iconBg}">${icon}</div>
+      <div style="flex:1;min-width:0">
+        <div class="video-label" style="color:${labelColor}">${label}</div>
+        <div class="video-title">${video.title}</div>
+        <div class="video-meta">YouTube · ${video.dur}${authorStr}</div>
+      </div>
+      <span class="video-arrow">→</span>
+    </div>
+  </a>`;
+}
+
+// ── Sunday ────────────────────────────────────────────────
+function buildSunday() {
+  // If user has swapped Sunday to a workout day, show that workout instead
+  const todayDateKey = todayKey();
+  const override = state.workoutOverride[todayDateKey];
+  if (state.activeDay === 'Sunday' && override && override !== 'Sunday') {
+    return buildWorkoutDay('Sunday');
+  }
+
+  const s = PLAN.Sunday;
+  const c = s.color;
+  const complete = !!state.completed[todayKey()];
+
+  let stretchIdx = 0;
+  const sections = s.sections.map(sec => {
+    const moves = sec.moves.map(m => {
+      const sid = 'stretch-' + (stretchIdx++);
+      // parse seconds from hold string
+      let secs = 0;
+      const secM = m.hold.match(/(\d+)\s*sec/);
+      const minM = m.hold.match(/(\d+)\s*min/);
+      if (secM) secs = parseInt(secM[1]);
+      else if (minM) secs = parseInt(minM[1]) * 60;
+      const timerBtn = secs > 0
+        ? `<button id="stimer-${sid}" class="stretch-timer-btn" onclick="startStretchTimer('${sid}',${secs})">▶ Start</button>`
+        : '';
+      return `
+      <div class="stretch-move">
+        <span class="stretch-name">${m.name}</span>
+        <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+          <span class="stretch-hold" style="background:${c}22;color:${c}">${m.hold}</span>
+          ${timerBtn}
+        </div>
+      </div>`;
+    }).join('');
+    return `
+    <div class="stretch-section">
+      <div class="stretch-section-header">
+        <div class="stretch-section-title" style="color:${c}">${sec.title}</div>
+        <div class="stretch-section-dur">${sec.duration}</div>
+      </div>
+      ${moves}
+    </div>`;
+  }).join('');
+
+  return `
+  <div class="day-header" style="background:linear-gradient(135deg,${c}18,${c}06);border:1px solid ${c}30">
+    <div class="day-header-inner">
+      <span class="day-emoji">${s.emoji}</span>
+      <div>
+        <div class="day-title" style="color:${c}">${s.label}</div>
+        <div class="day-focus">${s.focus}</div>
+      </div>
+      <div class="day-badges">
+        <div class="badge" style="background:${c}22;color:${c}">Recovery</div>
+        <div class="badge badge-time">⏱ ${s.duration}</div>
+      </div>
+    </div>
+    <div style="margin-top:12px">
+      <div style="font-size:10px;letter-spacing:2px;color:rgba(255,255,255,0.3);text-transform:uppercase;margin-bottom:6px">📋 Swap to a workout day instead</div>
+      <select onchange="setWorkoutOverride('Sunday', this.value)"
+        style="width:100%;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:#fff;font-size:13px;font-weight:600;padding:9px 12px;outline:none;cursor:pointer;appearance:none;-webkit-appearance:none;font-family:'DM Sans',sans-serif">
+        <option value="Sunday">Sunday — Active Recovery (default)</option>
+        ${ALL_DAYS.filter(d => d !== 'Sunday').map(d => `<option value="${d}">${d} — ${PLAN[d].label}</option>`).join('')}
+      </select>
+    </div>
+    <button class="complete-btn${complete?' done':''}" onclick="toggleToday()">
+      ${complete ? '✅ Logged — tap to undo' : '✅ Mark stretch complete'}
+    </button>
+  </div>
+
+  <div style="margin-bottom:16px;display:flex;flex-direction:column;gap:10px">
+    <a href="${s.hipVideo.url}" target="_blank" rel="noopener noreferrer">
+      <div class="video-card" style="background:rgba(96,184,255,0.08);border:1px solid rgba(96,184,255,0.2)">
+        <div class="video-icon" style="background:rgba(96,184,255,0.15)">🦵</div>
+        <div style="flex:1;min-width:0">
+          <div class="video-label" style="color:rgba(96,184,255,0.9)">Hip Mobility</div>
+          <div class="video-title">${s.hipVideo.title}</div>
+          <div class="video-meta">YouTube · ${s.hipVideo.dur} · ${s.hipVideo.author}</div>
+        </div>
+        <span class="video-arrow">→</span>
+      </div>
+    </a>
+    <a href="${s.stretchVideo.url}" target="_blank" rel="noopener noreferrer">
+      <div class="video-card" style="background:rgba(96,184,255,0.05);border:1px solid rgba(96,184,255,0.15)">
+        <div class="video-icon" style="background:rgba(96,184,255,0.1)">🧘</div>
+        <div style="flex:1;min-width:0">
+          <div class="video-label" style="color:rgba(96,184,255,0.7)">Full Body Stretch</div>
+          <div class="video-title">${s.stretchVideo.title}</div>
+          <div class="video-meta">YouTube · ${s.stretchVideo.dur} · ${s.stretchVideo.author}</div>
+        </div>
+        <span class="video-arrow">→</span>
+      </div>
+    </a>
+  </div>
+
+  ${sections}
+
+  ${buildWeeklyRecap()}
+
+  <div class="tips-card">
+    <div class="tips-title">💡 Tips</div>
+    <div class="tips-text">
+      • Never stretch to the point of <b>pain</b> — mild tension only<br>
+      • <b>Breathe deeply</b> and relax further on each exhale<br>
+      • Hip mobility Sunday = <b>better glute activation</b> all week
+    </div>
+  </div>`;
+}
+
+// ── Progression Overview (Calendar tab) ──────────────────
+function buildProgressionOverview() {
+  const puProg = getProgressionPhase('pullup');
+  const psProg = getProgressionPhase('pushup');
+  const puPhase = PULLUP_PHASES[puProg.phaseIndex];
+  const psPhase = PUSHUP_PHASES[psProg.phaseIndex];
+
+  function miniPhaseBar(phases, idx) {
+    return phases.map((p, i) => {
+      const done = i < idx;
+      const cur = i === idx;
+      const w = cur ? 'font-weight:700' : '';
+      return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px">
+        <div style="width:100%;height:5px;border-radius:3px;background:${done ? p.color : (cur ? p.color+'99' : 'rgba(255,255,255,0.1)')}"></div>
+        <span style="font-size:8px;color:${cur ? p.color : 'rgba(255,255,255,0.2)'};${w}">P${p.phase}</span>
+      </div>`;
+    }).join('');
+  }
+
+  // Pull-up dots (out of 6)
+  const puDots = Array.from({length: puProg.sessionsPerPhase}, (_, i) => {
+    const filled = i < puProg.sessionsIntoPhase;
+    return `<div style="width:9px;height:9px;border-radius:50%;background:${filled ? puPhase.color : 'rgba(255,255,255,0.12)'};border:1.5px solid ${filled ? puPhase.color : 'rgba(255,255,255,0.15)'}"></div>`;
+  }).join('');
+
+  // Push-up dots (out of 4)
+  const psDots = Array.from({length: psProg.sessionsPerPhase}, (_, i) => {
+    const filled = i < psProg.sessionsIntoPhase;
+    return `<div style="width:9px;height:9px;border-radius:50%;background:${filled ? psPhase.color : 'rgba(255,255,255,0.12)'};border:1.5px solid ${filled ? psPhase.color : 'rgba(255,255,255,0.15)'}"></div>`;
+  }).join('');
+
+  const puNext = puProg.phaseIndex < 4
+    ? `${puProg.sessionsUntilNext} session${puProg.sessionsUntilNext !== 1 ? 's' : ''} to Phase ${puProg.phaseIndex + 2}`
+    : '🏆 Final Phase';
+  const psNext = psProg.phaseIndex < 4
+    ? `${psProg.sessionsUntilNext} session${psProg.sessionsUntilNext !== 1 ? 's' : ''} to Phase ${psProg.phaseIndex + 2}`
+    : '🏆 Final Phase';
+
+  return `
+  <div style="margin-bottom:20px">
+    <div style="font-size:11px;letter-spacing:2px;color:rgba(255,255,255,0.3);text-transform:uppercase;margin-bottom:10px">📈 Progression Tracker</div>
+
+    <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:14px;margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.3);letter-spacing:1px;text-transform:uppercase;margin-bottom:3px">🏋️ Pull-up Bar · Wed & Fri</div>
+          <div style="font-size:13px;font-weight:700;color:${puPhase.color}">Phase ${puPhase.phase} — ${puPhase.label}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:${puPhase.color}">${puProg.sessionCount}</div>
+          <div style="font-size:9px;color:rgba(255,255,255,0.3)">sessions</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:4px;margin-bottom:8px">${miniPhaseBar(PULLUP_PHASES, puProg.phaseIndex)}</div>
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div style="display:flex;gap:5px">${puDots}</div>
+        <div style="font-size:10px;color:rgba(255,255,255,0.3)">${puNext}</div>
+      </div>
+    </div>
+
+    <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.3);letter-spacing:1px;text-transform:uppercase;margin-bottom:3px">💪 Push-ups · Mon & Fri</div>
+          <div style="font-size:13px;font-weight:700;color:${psPhase.color}">Phase ${psPhase.phase} — ${psPhase.label}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:${psPhase.color}">${psProg.sessionCount}</div>
+          <div style="font-size:9px;color:rgba(255,255,255,0.3)">sessions</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:4px;margin-bottom:8px">${miniPhaseBar(PUSHUP_PHASES, psProg.phaseIndex)}</div>
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div style="display:flex;gap:5px">${psDots}</div>
+        <div style="font-size:10px;color:rgba(255,255,255,0.3)">${psNext}</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ── Calendar ──────────────────────────────────────────────
+function buildCalendar() {
+  const today = new Date();
+  const year  = state.calYear;
+  const month = state.calMonth;
+  const monthName = new Date(year, month, 1).toLocaleString('default', { month: 'long' });
+  const firstDay  = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const tKey = todayKey();
+
+  const labels = DAY_ABBR.map(d => `<div class="cal-day-label">${d}</div>`).join('');
+  let cells = '';
+  for (let i = 0; i < firstDay; i++) cells += '<div></div>';
+  for (let d = 1; d <= daysInMonth; d++) {
+    const date = new Date(year, month, d);
+    const key  = dateKey(date);
+    const isToday = key === tKey;
+    const dayName = ALL_DAYS[date.getDay()];
+    const completedVal = state.completed[key];
+    const completed = !!completedVal;
+    const isFuture = date > today && !isToday;
+    // Color: use stored workout if completed, else check date-specific override, else default
+    const planDay = completed ? completedVal
+      : (state.workoutOverride[key] ? state.workoutOverride[key] : dayName);
+    const ac = planDay === 'Sunday' ? '#60B8FF' : (PLAN[planDay] ? PLAN[planDay].color : '#ffffff');
+
+    let cellStyle = isFuture ? 'opacity:0.35;' : '';
+    let numStyle  = 'color:rgba(255,255,255,0.6)';
+    if (completed) { cellStyle += `background:${ac}30;border:1.5px solid ${ac}77;`; numStyle = `color:${ac};font-weight:${isToday?800:500}`; }
+    else if (isToday) { cellStyle += 'background:rgba(255,255,255,0.1);border:1.5px solid rgba(255,255,255,0.35);'; numStyle = 'color:#fff;font-weight:800'; }
+
+    cells += `<div class="cal-cell" style="${cellStyle}" onclick="calToggle('${key}','${dayName}')">
+      <span class="cal-num" style="${numStyle}">${d}</span>
+      <div class="cal-dot" style="background:${completed ? ac : ac+'44'}"></div>
+      ${completed ? `<span class="cal-check" style="color:${ac}">✓</span>` : ''}
+    </div>`;
+  }
+
+  const dow = today.getDay();
+  const monday = new Date(today);
+  monday.setDate(today.getDate() - (dow === 0 ? 6 : dow - 1));
+  let thisWeek = 0;
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    if (state.completed[dateKey(d)]) thisWeek++;
+  }
+  const total = Object.values(state.completed).filter(Boolean).length;
+
+  // Weekly stats
+  let thisWeekVol = 0;
+  let thisWeekDuration = 0;
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(monday); d.setDate(monday.getDate() + i);
+    const dk = dateKey(d);
+    if (state.completed[dk]) {
+      thisWeekVol += state.volume[dk] || 0;
+      thisWeekDuration += state.sessionDurations[dk] || 0;
+    }
+  }
+  const totalVol = Object.keys(state.volume).reduce((a, k) => a + (state.volume[k] || 0), 0);
+  const avgDuration = (() => {
+    const durs = Object.values(state.sessionDurations).filter(v => v > 0);
+    if (!durs.length) return 0;
+    return Math.round(durs.reduce((a, v) => a + v, 0) / durs.length);
+  })();
+  const fmtDur = (sec) => sec > 0 ? `${Math.floor(sec/60)}m` : '—';
+  const fmtVol = (lbs) => lbs > 0 ? (lbs >= 1000 ? (lbs/1000).toFixed(1)+'k' : lbs+'') + ' lbs' : '—';
+
+  // Build muscle heatmap for this week
+  const muscleMap = buildMuscleHeatmap(monday);
+  const heatmapHTML = buildHeatmapHTML(muscleMap);
+
+  return `
+  <div class="calendar-wrap">
+    <div class="cal-nav">
+      <button class="cal-nav-btn" onclick="calPrev()">&#8249;</button>
+      <div class="cal-month">${monthName} ${year}</div>
+      <button class="cal-nav-btn" onclick="calNext()">&#8250;</button>
+    </div>
+    <div class="cal-grid">${labels}${cells}</div>
+    <div class="cal-legend">
+      <div class="legend-item"><div class="legend-dot" style="background:rgba(255,255,255,0.4)"></div><span class="legend-label">Today</span></div>
+      <div class="legend-item"><div class="legend-dot" style="background:#22c55e"></div><span class="legend-label">Completed</span></div>
+      <div class="legend-item"><div class="legend-dot" style="background:#60B8FF"></div><span class="legend-label">Stretch (Sun)</span></div>
+    </div>
+    <div class="streak-row">
+      <div class="streak-box"><div class="streak-num" style="color:#F59E0B">${thisWeek}</div><div class="streak-lbl">This week</div></div>
+      <div class="streak-box"><div class="streak-num" style="color:#A78BFA">${total}</div><div class="streak-lbl">Total sessions</div></div>
+      <div class="streak-box"><div class="streak-num" style="color:#34D399;font-size:18px">${fmtDur(avgDuration)}</div><div class="streak-lbl">Avg duration</div></div>
+    </div>
+  </div>
+
+  <!-- Streak Counter -->
+  <div style="background:linear-gradient(135deg,rgba(239,68,68,0.12),rgba(245,158,11,0.08));border:1px solid rgba(239,68,68,0.25);border-radius:16px;padding:16px;margin-bottom:16px;text-align:center">
+    <div style="font-size:48px;margin-bottom:8px">🔥</div>
+    <div style="display:flex;gap:20px;justify-content:center;align-items:center">
+      <div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:36px;color:#ef4444;line-height:1">${calculateStreaks().current}</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1px;margin-top:4px">Day Streak</div>
+      </div>
+      <div style="width:1px;height:50px;background:rgba(255,255,255,0.1)"></div>
+      <div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:#F59E0B;line-height:1">Best: ${calculateStreaks().longest}</div>
+        <div style="font-size:10px;color:rgba(255,255,255,0.3);margin-top:4px">Longest streak</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Weekly Summary -->
+  <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:14px 16px;margin-bottom:16px">
+    <div style="font-size:11px;letter-spacing:2px;color:rgba(255,255,255,0.3);text-transform:uppercase;margin-bottom:12px">📊 This Week's Summary</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div style="background:rgba(255,255,255,0.04);border-radius:12px;padding:12px">
+        <div style="font-size:10px;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Volume lifted</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:#FF6B35">${fmtVol(thisWeekVol)}</div>
+      </div>
+      <div style="background:rgba(255,255,255,0.04);border-radius:12px;padding:12px">
+        <div style="font-size:10px;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Time trained</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:#60B8FF">${fmtDur(thisWeekDuration)}</div>
+      </div>
+      <div style="background:rgba(255,255,255,0.04);border-radius:12px;padding:12px">
+        <div style="font-size:10px;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">All-time volume</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:#A78BFA">${fmtVol(totalVol)}</div>
+      </div>
+      <div style="background:rgba(255,255,255,0.04);border-radius:12px;padding:12px">
+        <div style="font-size:10px;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Sessions logged</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:#34D399">${total}</div>
+      </div>
+    </div>
+  </div>
+  ${heatmapHTML}
+  ${buildProgressionOverview()}`;
+}
+
+// ── Muscle Heatmap ────────────────────────────────────────
+// ── Last Session Preview ───────────────────────────────────
+function getLastSessionData(dayName, exName, currentSets) {
+  // Find the last time this specific day was completed
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const completedDates = Object.entries(state.completed)
+    .filter(([key, planDay]) => planDay === dayName)
+    .map(([key]) => {
+      const parts = key.split('-');
+      return { key, date: new Date(parseInt(parts[0]), parseInt(parts[1]), parseInt(parts[2])) };
+    })
+    .filter(({ date }) => date < today)
+    .sort((a, b) => b.date - a.date);
+
+  if (!completedDates.length) return null;
+
+  const lastSession = completedDates[0];
+  const k = exKey(dayName, exName);
+  const log = state.setLogs[k];
+
+  if (!log || !log.weights.some(w => w)) return null;
+
+  // Calculate stats
+  const weights = log.weights.slice(0, currentSets);
+  const checked = log.checked.slice(0, currentSets);
+  const weightValues = weights.map(w => parseFloat(w)).filter(n => !isNaN(n) && n > 0);
+
+  if (!weightValues.length) return null;
+
+  const avgWeight = weightValues.reduce((a, b) => a + b, 0) / weightValues.length;
+  const completedSets = checked.filter(Boolean).length;
+  const allComplete = completedSets === currentSets;
+
+  // Calculate days ago
+  const daysAgo = Math.floor((today - lastSession.date) / (1000 * 60 * 60 * 24));
+  const dateStr = daysAgo === 7 ? '7 days ago' : (daysAgo === 1 ? 'yesterday' : `${daysAgo} days ago`);
+
+  // Build reps display
+  const repsDisplay = weights.map((w, i) => w ? (checked[i] ? '✓' : '○') : '—').join(', ');
+
+  // Calculate volume (estimate based on weight)
+  const day = PLAN[dayName];
+  const ex = day?.exercises?.find(e => e.name === exName);
+  const repsPerSet = ex ? parseInt((ex.reps || '').toString().split('–')[0]) || 10 : 10;
+  const volume = Math.round(weightValues.reduce((sum, w) => sum + (w * repsPerSet), 0));
+
+  // Smart suggestion
+  let suggestion = '';
+  if (allComplete && avgWeight > 0) {
+    const nextWeight = DB_WEIGHTS.find(w => w > avgWeight);
+    if (nextWeight) {
+      suggestion = `💡 All sets complete! Ready to try ${nextWeight} lbs today`;
+    } else {
+      suggestion = `💪 Max weight! Consider adding reps or slowing tempo`;
+    }
+  } else if (completedSets > 0 && completedSets < currentSets) {
+    suggestion = `💡 Keep ${avgWeight.toFixed(2)} lbs, aim for all ${currentSets} sets today`;
+  } else if (completedSets === 0) {
+    suggestion = `💡 Last time was challenging — consider ${avgWeight.toFixed(2)} lbs or lighter`;
+  }
+
+  return {
+    date: lastSession.date,
+    dateStr,
+    daysAgo,
+    weight: avgWeight.toFixed(2),
+    weights,
+    repsDisplay,
+    completedSets,
+    totalSets: currentSets,
+    allComplete,
+    volume,
+    suggestion
+  };
+}
+
+function buildLastSessionPreview(dayName, exName, numSets, color) {
+  const data = getLastSessionData(dayName, exName, numSets);
+  if (!data) return '';
+
+  const checkmark = data.allComplete ? '✓' : `${data.completedSets}/${data.totalSets}`;
+  const borderColor = data.allComplete ? 'rgba(34,197,94,0.3)' : 'rgba(245,158,11,0.3)';
+  const bgColor = data.allComplete ? 'rgba(34,197,94,0.08)' : 'rgba(245,158,11,0.08)';
+
+  return `<div style="background:${bgColor};border:1px solid ${borderColor};border-radius:10px;padding:10px 12px;margin-bottom:10px">
+    <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">📅 Last session (${data.dateStr})</div>
+    <div style="font-size:13px;color:#fff;font-weight:600;margin-bottom:3px">${data.weight} lbs • ${data.repsDisplay} ${checkmark}</div>
+    <div style="font-size:11px;color:rgba(255,255,255,0.35);margin-bottom:${data.suggestion ? '4px' : '0'}">Volume: ${data.volume} lbs</div>
+    ${data.suggestion ? `<div style="font-size:11px;color:${color};line-height:1.5;margin-top:4px">${data.suggestion}</div>` : ''}
+  </div>`;
+}
+
+// ── Weight selector for DB/Band exercises ──────────────────
+const DB_WEIGHTS = [3.85, 6.35, 8.85, 11.35]; // Bar only, +1.25, +2.5, +all
+const BAND_COLORS = [
+  { label: 'Yellow',  value: 'Yellow',  range: '5–15 lbs',   hex: '#eab308' },
+  { label: 'Black',   value: 'Black',   range: '15–35 lbs',  hex: '#6b7280' },
+  { label: 'Green',   value: 'Green',   range: '25–65 lbs',  hex: '#22c55e' },
+  { label: 'Red',     value: 'Red',     range: '50–125 lbs', hex: '#ef4444' },
+];
+
+function buildMasterWeightSelector(k, numSets, equipment) {
+  if (!equipment || (!equipment.includes('DB') && !equipment.toLowerCase().includes('band'))) {
+    return '';
+  }
+
+  const isBand = equipment.toLowerCase().includes('band');
+
+  if (isBand) {
+    const buttons = BAND_COLORS.map(b =>
+      `<button class="weight-btn" style="border-color:${b.hex};color:${b.hex}" onclick="setAllWeights('${k}',${numSets},'${b.value}')">
+        <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${b.hex};margin-right:4px;vertical-align:middle"></span>${b.label}<span style="font-size:9px;opacity:0.6;margin-left:4px">${b.range}</span>
+      </button>`
+    ).join('');
+    return `<div style="margin-bottom:8px">
+      <div style="font-size:10px;letter-spacing:1px;color:rgba(255,255,255,0.3);text-transform:uppercase;margin-bottom:6px">Band color for all sets</div>
+      <div class="weight-quick-select">${buttons}</div>
+    </div>`;
+  }
+
+  const buttons = DB_WEIGHTS.map(w =>
+    `<button class="weight-btn" onclick="setAllWeights('${k}',${numSets},${w})">${w} lbs</button>`
+  ).join('');
+
+  return `<div style="margin-bottom:8px">
+    <div style="font-size:10px;letter-spacing:1px;color:rgba(255,255,255,0.3);text-transform:uppercase;margin-bottom:6px">Set weight for all sets</div>
+    <div class="weight-quick-select">${buttons}</div>
+  </div>`;
+}
+
+function setAllWeights(k, numSets, weight) {
+  // Handle phase exercise keys (e.g., "Monday__Pull-up Bar Work-ex0")
+  const baseKey = k.replace(/-ex\d+$/, ''); // Remove "-ex0", "-ex1" etc. if present
+  const isPhaseEx = k !== baseKey;
+
+  if (isPhaseEx) {
+    // For phase exercises, we need to find the offset for this specific exercise
+    const exMatch = k.match(/-ex(\d+)$/);
+    if (!exMatch) return;
+
+    const exIdx = parseInt(exMatch[1]);
+
+    // Get total sets before this exercise to calculate offset
+    const parts = baseKey.split('__');
+    const dayName = parts[0];
+    const exName = parts.slice(1).join('__');
+    const day = PLAN[dayName];
+    const exercise = day?.exercises?.find(e => e.name === exName);
+
+    if (exercise?.progression) {
+      const prog = getProgressionPhase(exercise.progression);
+      const phases = exercise.progression === 'pullup' ? PULLUP_PHASES : PUSHUP_PHASES;
+      const phase = phases[prog.phaseIndex];
+      const phaseSetCounts = phase.exercises.map(pe => parseInt(pe.sets) || 3);
+      const offset = phaseSetCounts.slice(0, exIdx).reduce((a, b) => a + b, 0);
+
+      // Ensure log exists
+      const totalPhaseSets = phaseSetCounts.reduce((a, b) => a + b, 0);
+      if (!state.setLogs[baseKey]) {
+        state.setLogs[baseKey] = { checked: Array(totalPhaseSets).fill(false), weights: Array(totalPhaseSets).fill(''), reps: Array(totalPhaseSets).fill('') };
+      }
+
+      // Set weights for this phase exercise's sets
+      for (let i = 0; i < numSets; i++) {
+        const fi = offset + i;
+        state.setLogs[baseKey].weights[fi] = weight.toString();
+        const input = document.getElementById(`weight-input-${baseKey}-${fi}`);
+        if (input) input.value = weight;
+      }
+    }
+  } else {
+    // Standard exercise
+    if (!state.setLogs[k]) {
+      const parts = k.split('__');
+      const dayName = parts[0];
+      const exName = parts.slice(1).join('__');
+      state.setLogs[k] = { checked: Array(numSets).fill(false), weights: Array(numSets).fill(''), reps: Array(numSets).fill('') };
+    }
+
+    // Set all weights to the selected value
+    for (let i = 0; i < numSets; i++) {
+      state.setLogs[k].weights[i] = weight.toString();
+      const input = document.getElementById(`weight-input-${k}-${i}`);
+      if (input) input.value = weight;
+    }
+  }
+
+  saveSetLogs();
+}
+
+function toggleSetWeightPicker(k, idx) {
+  const picker = document.getElementById(`set-picker-${k}-${idx}`);
+  if (!picker) return;
+
+  // Close all other pickers
+  document.querySelectorAll('.set-weight-picker.open').forEach(p => {
+    if (p !== picker) p.classList.remove('open');
+  });
+
+  picker.classList.toggle('open');
+}
+
+function setIndividualWeight(k, idx, weight) {
+  if (!state.setLogs[k]) {
+    const parts = k.split('__');
+    const dayName = parts[0];
+    const exName = parts.slice(1).join('__');
+    const sets = getExSetsCount(dayName, exName);
+    state.setLogs[k] = { checked: Array(sets).fill(false), weights: Array(sets).fill(''), reps: Array(sets).fill('') };
+  }
+
+  state.setLogs[k].weights[idx] = weight.toString();
+  const input = document.getElementById(`weight-input-${k}-${idx}`);
+  if (input) input.value = weight;
+
+  // Close picker
+  const picker = document.getElementById(`set-picker-${k}-${idx}`);
+  if (picker) picker.classList.remove('open');
+
+  saveSetLogs();
+}
+
+const MUSCLE_GROUPS = {
+  'Chest': { color: '#FF6B35', days: ['Monday','Friday'] },
+  'Shoulders': { color: '#F59E0B', days: ['Monday','Wednesday','Friday'] },
+  'Triceps': { color: '#FF6B35', days: ['Monday','Friday','Saturday'] },
+  'Back': { color: '#A78BFA', days: ['Wednesday','Friday'] },
+  'Biceps': { color: '#A78BFA', days: ['Wednesday','Saturday'] },
+  'Quads': { color: '#4ECDC4', days: ['Tuesday','Thursday'] },
+  'Glutes': { color: '#34D399', days: ['Tuesday','Thursday'] },
+  'Hamstrings': { color: '#34D399', days: ['Tuesday','Thursday'] },
+  'Core': { color: '#60B8FF', days: ['Tuesday','Thursday','Saturday'] },
+  'Arms': { color: '#F472B6', days: ['Saturday'] },
+};
+
+function buildMuscleHeatmap(weekStart) {
+  const hits = {};
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(weekStart);
+    d.setDate(weekStart.getDate() + i);
+    const key = dateKey(d);
+    if (state.completed[key]) {
+      const planDay = state.completed[key];
+      Object.entries(MUSCLE_GROUPS).forEach(([muscle, info]) => {
+        if (info.days.includes(planDay)) {
+          hits[muscle] = (hits[muscle] || 0) + 1;
+        }
+      });
+    }
+  }
+  return hits;
+}
+
+function buildHeatmapHTML(hits) {
+  const muscles = Object.keys(MUSCLE_GROUPS);
+  const maxHits = Math.max(1, ...Object.values(hits));
+  const bars = muscles.map(m => {
+    const count = hits[m] || 0;
+    const pct = count / maxHits;
+    const color = MUSCLE_GROUPS[m].color;
+    const opacity = count === 0 ? 0.12 : 0.3 + pct * 0.7;
+    return `
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
+      <div style="width:72px;font-size:11px;color:rgba(255,255,255,${count > 0 ? '0.7' : '0.3'});text-align:right;flex-shrink:0">${m}</div>
+      <div style="flex:1;height:8px;border-radius:4px;background:rgba(255,255,255,0.07);overflow:hidden">
+        <div style="height:100%;width:${count > 0 ? Math.max(pct * 100, 15) : 0}%;background:${color};border-radius:4px;opacity:${opacity};transition:width 0.4s"></div>
+      </div>
+      <div style="width:16px;font-size:10px;color:${count > 0 ? color : 'rgba(255,255,255,0.2)'};font-weight:700;flex-shrink:0">${count > 0 ? count + 'x' : ''}</div>
+    </div>`;
+  }).join('');
+
+  const totalHit = Object.keys(hits).length;
+  const totalMuscles = muscles.length;
+
+  return `
+  <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:14px 16px;margin-bottom:16px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div style="font-size:11px;letter-spacing:2px;color:rgba(255,255,255,0.3);text-transform:uppercase">💪 This Week's Muscles</div>
+      <div style="font-size:11px;color:rgba(255,255,255,0.35)">${totalHit}/${totalMuscles} groups hit</div>
+    </div>
+    ${bars}
+    ${totalHit === 0 ? '<div style="text-align:center;font-size:12px;color:rgba(255,255,255,0.25);padding:10px 0">Complete workouts to see your muscle coverage</div>' : ''}
+  </div>`;
+}
+
+// ── Event handlers ────────────────────────────────────────
+function setWorkoutOverride(calDay, planDay) {
+  const key = todayKey(); // tie override to today's specific date
+  if (planDay === calDay) {
+    delete state.workoutOverride[key];
+  } else {
+    state.workoutOverride[key] = planDay;
+  }
+  saveOverride();
+  render();
+}
+
+function clearOverride(calDay) {
+  const key = todayKey();
+  delete state.workoutOverride[key];
+  saveOverride();
+  render();
+}
+
+function saveNoteForDay(dayName) {
+  const el = document.getElementById('session-notes-area');
+  if (!el) return;
+  state.sessionNotes[dayName] = el.value;
+  saveNotes();
+}
+
+function setView(v) {
+  if (v === 'workout' && !state.sessionStart) {
+    state.sessionStart = Date.now();
+    saveSessionStart();
+  }
+  state.view = v;
+  render();
+}
+function setDay(d) { state.activeDay = d; state.resetConfirm = null; render(); }
+
+function resetSessionTimer() {
+  state.sessionStart = Date.now();
+  saveSessionStart();
+}
+function goToToday() { state.activeDay = todayDayName(); state.view = 'workout'; render(); }
+function calPrev() { state.calMonth--; if (state.calMonth < 0) { state.calMonth = 11; state.calYear--; } render(); }
+function calNext() { state.calMonth++; if (state.calMonth > 11) { state.calMonth = 0; state.calYear++; } render(); }
+
+function toggleToday() {
+  const k = todayKey();
+  const calDay = todayDayName();
+  const planDay = state.workoutOverride[k] || calDay;
+  if (state.completed[k]) {
+    // Uncompleting
+    delete state.completed[k];
+    delete state.sessionDurations[k];
+    delete state.volume[k];
+    saveCompleted();
+    saveDurations();
+    saveVolume();
+    render();
+  } else {
+    // Completing - show summary
+    state.completed[k] = planDay;
+    const elapsed = getSessionElapsed();
+    if (elapsed > 0) state.sessionDurations[k] = elapsed;
+    const vol = computeSessionVolume(planDay);
+    if (vol > 0) state.volume[k] = vol;
+
+    // Collect any new PRs from this session
+    const day = PLAN[planDay];
+    const newPRs = [];
+    if (day && day.exercises) {
+      day.exercises.forEach(ex => {
+        if (ex.progression) return;
+        const exKey_ = exKey(planDay, ex.name);
+        const prInfo = state.prs[exKey_];
+        if (prInfo && prInfo.date === new Date().toLocaleDateString()) {
+          newPRs.push(`${ex.name}: ${prInfo.weight} lbs`);
+        }
+      });
+    }
+
+    saveDurations();
+    saveVolume();
+    saveCompleted();
+
+    // Show completion modal
+    showCompletionSummary(planDay, elapsed, vol, newPRs);
+
+    render();
+  }
+}
+
+function calToggle(key, dayName) {
+  const planDay = state.workoutOverride[key] || dayName;
+  if (state.completed[key]) {
+    delete state.completed[key];
+  } else {
+    state.completed[key] = planDay;
+  }
+  saveCompleted();
+  render();
+}
+
+function toggleExercise(k) {
+  state.expanded[k] = !state.expanded[k];
+  const container = document.getElementById('sets-' + k);
+  const card = container && container.closest('.exercise-card');
+  // Re-render only the inner toggle to avoid losing input focus
+  if (container) {
+    container.style.display = state.expanded[k] ? 'flex' : 'none';
+    const chev = container.previousElementSibling && container.previousElementSibling.querySelector('.chevron');
+    if (chev) chev.textContent = state.expanded[k] ? '▲' : '▼';
+  }
+}
+
+function toggleSetup(k) {
+  state.setupVisible[k] = !state.setupVisible[k];
+  const setupDiv = document.getElementById('setup-' + k);
+  if (setupDiv) {
+    setupDiv.style.display = state.setupVisible[k] ? 'block' : 'none';
+    // Update button text
+    const btn = setupDiv.previousElementSibling;
+    if (btn) {
+      const span = btn.querySelector('span');
+      const chevron = btn.querySelectorAll('span')[1];
+      if (span) span.textContent = `👁️ ${state.setupVisible[k] ? 'Hide' : 'Show'} setup & cues`;
+      if (chevron) chevron.textContent = state.setupVisible[k] ? '▲' : '▼';
+    }
+  }
+}
+
+// ── Exercise Quick Actions ─────────────────────────────────
+function copyLastWeek(k, numSets) {
+  const parts = k.split('__');
+  const dayName = parts[0];
+  const exName = parts.slice(1).join('__');
+
+  const data = getLastSessionData(dayName, exName, numSets);
+  if (!data || !data.weights.length) {
+    alert('No previous session data found');
+    return;
+  }
+
+  // Initialize log if needed
+  if (!state.setLogs[k]) {
+    state.setLogs[k] = { checked: Array(numSets).fill(false), weights: Array(numSets).fill(''), reps: Array(numSets).fill('') };
+  }
+
+  // Copy weights from last session
+  for (let i = 0; i < numSets; i++) {
+    if (data.weights[i]) {
+      state.setLogs[k].weights[i] = data.weights[i];
+      const input = document.getElementById(`weight-input-${k}-${i}`);
+      if (input) input.value = data.weights[i];
+    }
+  }
+
+  saveSetLogs();
+
+  // Show confirmation
+  const container = document.getElementById('sets-' + k);
+  if (container) {
+    const card = container.closest('.exercise-card');
+    const header = card?.querySelector('.exercise-header');
+    if (header) {
+      const flash = document.createElement('div');
+      flash.style.cssText = 'position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(34,197,94,0.2);border-radius:12px;pointer-events:none;animation:fadeOut 0.6s forwards';
+      header.style.position = 'relative';
+      header.appendChild(flash);
+      setTimeout(() => flash.remove(), 600);
+    }
+  }
+}
+
+function skipExercise(k) {
+  const parts = k.split('__');
+  const exName = parts.slice(1).join('__');
+
+  if (!confirm(`Skip "${exName}" today?`)) return;
+
+  // Mark all sets as skipped (checked but no weight)
+  const numSets = getExSetsCount(parts[0], exName);
+  if (!state.setLogs[k]) {
+    state.setLogs[k] = { checked: Array(numSets).fill(false), weights: Array(numSets).fill(''), reps: Array(numSets).fill('') };
+  }
+
+  // Mark as checked but leave weights empty (indicates skipped)
+  for (let i = 0; i < numSets; i++) {
+    state.setLogs[k].checked[i] = true;
+    state.setLogs[k].weights[i] = 'skipped';
+  }
+
+  saveSetLogs();
+  render();
+}
+
+function markAllSetsComplete(k, numSets) {
+  if (!state.setLogs[k]) {
+    state.setLogs[k] = { checked: Array(numSets).fill(false), weights: Array(numSets).fill(''), reps: Array(numSets).fill('') };
+  }
+
+  // Mark all as checked
+  for (let i = 0; i < numSets; i++) {
+    state.setLogs[k].checked[i] = true;
+
+    // Auto-fill current input values
+    const weightInput = document.getElementById(`weight-input-${k}-${i}`);
+    const repsInput = document.getElementById(`reps-input-${k}-${i}`);
+
+    if (weightInput && weightInput.value) {
+      state.setLogs[k].weights[i] = weightInput.value;
+    }
+    if (repsInput && repsInput.value) {
+      state.setLogs[k].reps[i] = repsInput.value;
+    }
+  }
+
+  saveSetLogs();
+  render();
+}
+
+function getExSetsCount(dayName, exName) {
+  const day = PLAN[dayName];
+  const ex = day && day.exercises && day.exercises.find(e => e.name === exName);
+  if (!ex) return 1;
+  if (ex.progression) {
+    const prog = getProgressionPhase(ex.progression);
+    const phases = ex.progression === 'pullup' ? PULLUP_PHASES : PUSHUP_PHASES;
+    const phase = phases[prog.phaseIndex];
+    // Total flat sets across all phase exercises
+    return phase.exercises.reduce((a, pe) => a + (parseInt(pe.sets) || 3), 0);
+  }
+  return ex.sets;
+}
+
+function toggleSet(k, idx, btn) {
+  const parts = k.split('__');
+  const dayName = parts[0];
+  const exName = parts.slice(1).join('__');
+  if (!state.setLogs[k]) {
+    const sets = getExSetsCount(dayName, exName);
+    state.setLogs[k] = { checked: Array(sets).fill(false), weights: Array(sets).fill(''), reps: Array(sets).fill('') };
+  }
+  const wasChecked = state.setLogs[k].checked[idx];
+  state.setLogs[k].checked[idx] = !wasChecked;
+  btn.classList.toggle('checked', state.setLogs[k].checked[idx]);
+  btn.textContent = state.setLogs[k].checked[idx] ? '✓' : '';
+  saveSetLogs();
+  updateExerciseBadge(k);
+
+  // Start rest timer when checking off (not unchecking)
+  if (!wasChecked) {
+    const day = PLAN[dayName];
+    const ex = day && day.exercises && day.exercises.find(e => e.name === exName);
+    let restSec = 90;
+    if (ex && ex.rest) {
+      const m = ex.rest.match(/(\d+)\s*min/);
+      const s = ex.rest.match(/(\d+)\s*sec/);
+      if (m) restSec = parseInt(m[1]) * 60;
+      else if (s) restSec = parseInt(s[1]);
+    }
+    const color = day ? day.color : '#fff';
+    startRestTimer(restSec, color);
+
+    // Save prev weights for next session
+    const weights = state.setLogs[k].weights;
+    if (weights && weights.some(w => w)) {
+      state.prevWeights[k] = [...weights];
+      savePrevWeights();
+    }
+
+    // Check PR
+    const weights2 = state.setLogs[k].weights;
+    const isNewPR = checkAndSavePR(k, weights2);
+    if (isNewPR) {
+      // Flash PR badge on exercise name
+      const container = document.getElementById('sets-' + k);
+      if (container) {
+        const card = container.closest('.exercise-card');
+        const nameRow = card && card.querySelector('.exercise-name-row');
+        if (nameRow && !nameRow.querySelector('.pr-badge')) {
+          const pr = document.createElement('span');
+          pr.className = 'pr-badge';
+          pr.textContent = '🏆 PR!';
+          nameRow.appendChild(pr);
+        }
+      }
+    }
+  }
+}
+
+function updateWeight(k, idx, val) {
+  if (!state.setLogs[k]) {
+    const parts = k.split('__');
+    const dayName = parts[0];
+    const exName = parts.slice(1).join('__');
+    const sets = getExSetsCount(dayName, exName);
+    state.setLogs[k] = { checked: Array(sets).fill(false), weights: Array(sets).fill(''), reps: Array(sets).fill('') };
+  }
+  state.setLogs[k].weights[idx] = val;
+  saveSetLogs();
+}
+
+function updateReps(k, idx, val) {
+  if (!state.setLogs[k]) {
+    const parts = k.split('__');
+    const dayName = parts[0];
+    const exName = parts.slice(1).join('__');
+    const sets = getExSetsCount(dayName, exName);
+    state.setLogs[k] = { checked: Array(sets).fill(false), weights: Array(sets).fill(''), reps: Array(sets).fill('') };
+  }
+  if (!state.setLogs[k].reps) state.setLogs[k].reps = Array(getExSetsCount(k.split('__')[0], k.split('__').slice(1).join('__'))).fill('');
+  state.setLogs[k].reps[idx] = val;
+  saveSetLogs();
+}
+
+function adjustReps(k, idx, delta) {
+  const input = document.getElementById(`reps-input-${k}-${idx}`);
+  if (!input) return;
+
+  const currentVal = parseInt(input.value) || 0;
+  const newVal = Math.max(0, currentVal + delta); // Don't go below 0
+
+  input.value = newVal;
+  updateReps(k, idx, newVal.toString());
+}
+
+function updateExerciseBadge(k) {
+  const log = state.setLogs[k];
+  if (!log) return;
+  const parts = k.split('__');
+  const dayName = parts[0];
+  const exName = parts.slice(1).join('__');
+  const day = PLAN[dayName];
+  const ex = day && day.exercises && day.exercises.find(e => e.name === exName);
+  if (!ex) return;
+  const totalSets = getExSetsCount(dayName, exName);
+  const doneSets = log.checked.filter(Boolean).length;
+  const allDone = doneSets === totalSets;
+  const c = ex.progression ? (ex.progression === 'pullup' ? PULLUP_PHASES[getProgressionPhase('pullup').phaseIndex].color : PUSHUP_PHASES[getProgressionPhase('pushup').phaseIndex].color) : day.color;
+
+  const container = document.getElementById('sets-' + k);
+  if (!container) return;
+  const card = container.closest('.exercise-card');
+  if (!card) return;
+
+  // Update card border/background
+  card.style.background = allDone ? 'rgba(34,197,94,0.06)' : 'rgba(255,255,255,0.05)';
+  card.style.border = allDone ? '1px solid rgba(34,197,94,0.25)' : '1px solid rgba(255,255,255,0.08)';
+
+  // Update progress badge
+  const nameRow = card.querySelector('.exercise-name-row');
+  if (nameRow) {
+    let badge = nameRow.querySelector('.ex-badge-done, .ex-badge-progress');
+    if (badge) badge.remove();
+    if (allDone) {
+      const span = document.createElement('span');
+      span.className = 'ex-badge-done';
+      span.textContent = '✓ done';
+      nameRow.appendChild(span);
+    } else if (doneSets > 0) {
+      const span = document.createElement('span');
+      span.className = 'ex-badge-progress';
+      span.style.color = c;
+      span.style.fontSize = '11px';
+      span.textContent = `${doneSets}/${totalSets}`;
+      nameRow.appendChild(span);
+    }
+  }
+}
+
+function handleReset(dayName) {
+  if (state.resetConfirm !== dayName) {
+    state.resetConfirm = dayName;
+    render();
+    return;
+  }
+  const day = PLAN[dayName];
+  day.exercises.forEach(ex => {
+    state.setLogs[exKey(dayName, ex.name)] = {
+      checked: Array(ex.sets).fill(false),
+      weights: Array(ex.sets).fill(''),
+    };
+  });
+  state.resetConfirm = null;
+  saveSetLogs();
+  render();
+}
+
+// ── Muscle Modal ──────────────────────────────────────────
+// Per-exercise muscle detail data (primary + secondary)
+const EXERCISE_MUSCLES = {
+  // Monday
+  'Dumbbell Bench Press':    { primary: ['Chest', 'Front Delts', 'Triceps'], secondary: ['Serratus'] },
+  'Push-ups':                { primary: ['Chest', 'Triceps'], secondary: ['Front Delts', 'Core', 'Serratus'] },
+  'Dumbbell Shoulder Press': { primary: ['Front Delts', 'Side Delts', 'Triceps'], secondary: ['Upper Traps'] },
+  'Lateral Raises':          { primary: ['Side Delts'], secondary: ['Upper Traps'] },
+  'Tricep Dips on Bench':    { primary: ['Triceps'], secondary: ['Chest', 'Front Delts'] },
+  'Band Tricep Pushdowns':   { primary: ['Triceps'], secondary: [] },
+  // Tuesday
+  'Dumbbell Squats':             { primary: ['Quads', 'Glutes'], secondary: ['Core', 'Hamstrings', 'Calves'] },
+  'Bulgarian Split Squats':      { primary: ['Quads', 'Glutes'], secondary: ['Hip Flexors', 'Core'] },
+  'Dumbbell Romanian Deadlifts': { primary: ['Hamstrings', 'Glutes'], secondary: ['Lower Back', 'Core'] },
+  'Glute Bridges w/ Dumbbell':   { primary: ['Glutes', 'Hamstrings'], secondary: ['Core', 'Lower Back'] },
+  'Plank':                       { primary: ['Core'], secondary: ['Shoulders', 'Glutes', 'Quads'] },
+  'Leg Raises':                  { primary: ['Lower Abs', 'Hip Flexors'], secondary: ['Core'] },
+  // Wednesday
+  'Pull-up Bar Work':            { primary: ['Lats', 'Biceps'], secondary: ['Rear Delts', 'Core', 'Forearms'] },
+  'Seated Resistance Band Rows': { primary: ['Mid Back', 'Biceps'], secondary: ['Rear Delts', 'Core'] },
+  'Dumbbell Bent-over Rows':     { primary: ['Lats', 'Mid Back'], secondary: ['Biceps', 'Core', 'Lower Back'] },
+  'Band Pull-Aparts':            { primary: ['Rear Delts', 'Upper Back'], secondary: ['Rotator Cuff'] },
+  'Band Face Pulls':             { primary: ['Rear Delts', 'Rotator Cuff'], secondary: ['Upper Traps', 'Biceps'] },
+  'Dumbbell Bicep Curls':        { primary: ['Biceps'], secondary: ['Brachialis', 'Forearms'] },
+  'Hammer Curls':                { primary: ['Brachialis', 'Biceps'], secondary: ['Forearms'] },
+  // Thursday
+  'Dumbbell Lunges':          { primary: ['Quads', 'Glutes'], secondary: ['Hamstrings', 'Calves', 'Core'] },
+  'Step-ups on Bench w/ DB':  { primary: ['Glutes', 'Quads'], secondary: ['Calves', 'Core'] },
+  'Sumo Squats w/ Dumbbell':  { primary: ['Inner Thighs', 'Glutes'], secondary: ['Quads', 'Core'] },
+  'Band Standing Kickbacks':  { primary: ['Glutes'], secondary: ['Hamstrings', 'Core'] },
+  'Bicycle Crunches':         { primary: ['Obliques', 'Upper Abs'], secondary: ['Hip Flexors', 'Lower Abs'] },
+  'Mountain Climbers':        { primary: ['Core', 'Hip Flexors'], secondary: ['Shoulders', 'Quads', 'Calves'] },
+  // Friday
+  'Dumbbell Incline Press':   { primary: ['Upper Chest', 'Front Delts'], secondary: ['Triceps', 'Serratus'] },
+  'Dumbbell Rows':            { primary: ['Lats', 'Mid Back', 'Biceps'], secondary: ['Core', 'Rear Delts'] },
+  'Arnold Press':             { primary: ['Front Delts', 'Side Delts', 'Rear Delts'], secondary: ['Triceps', 'Upper Traps'] },
+  'Band Chest Flyes':         { primary: ['Chest', 'Front Delts'], secondary: [] },
+  'Pull-up Practice':         { primary: ['Lats', 'Biceps'], secondary: ['Rear Delts', 'Core', 'Forearms'] },
+  'Dumbbell Skull Crushers':  { primary: ['Triceps'], secondary: ['Front Delts'] },
+  // Saturday
+  'Dumbbell Curl to Press':         { primary: ['Biceps', 'Front Delts'], secondary: ['Triceps', 'Side Delts'] },
+  'Concentration Curls':            { primary: ['Biceps'], secondary: ['Brachialis'] },
+  'Tricep Kickbacks':               { primary: ['Triceps'], secondary: [] },
+  'Overhead Tricep Extension':      { primary: ['Triceps'], secondary: ['Core'] },
+  'Band Bicep Curls':               { primary: ['Biceps', 'Brachialis'], secondary: ['Forearms'] },
+  'Crunches + Leg Raises + Plank':  { primary: ['Upper Abs', 'Lower Abs', 'Core'], secondary: ['Hip Flexors', 'Obliques'] },
+};
+
+// ── Accurate Anatomical SVG Body Figures ──────────────────
+// Muscle zone definitions with precise anatomical paths
+// ViewBox: 0 0 200 380  (scaled up for accuracy)
+
+const FRONT_ZONES = [
+  // Traps front — base of neck into shoulder, torso top-left and top-right x:76-124 y:88
+  { id: 'traps-front', muscles: ['Upper Traps'],
+    d: 'M84,88 C88,84 94,83 100,83 C106,83 112,84 116,88 C112,92 106,94 100,94 C94,94 88,92 84,88 Z' },
+  // Front delts — sit ON the shoulder cap = upper arm top anchor x:68-75 y:92, and x:125-132 y:92
+  { id: 'front-delts', muscles: ['Front Delts','Side Delts','Shoulders'],
+    d: 'M76,88 C72,90 68,94 68,100 C68,106 70,112 73,116 C76,112 78,106 79,100 C80,95 78,91 76,88 Z M124,88 C128,91 132,95 132,100 C132,106 130,112 127,116 C124,110 122,104 121,100 C120,95 122,91 124,88 Z' },
+  // Upper chest — top of torso x:76-124, y:88. Pec sits roughly y:88-108
+  { id: 'upper-chest', muscles: ['Upper Chest'],
+    d: 'M80,92 C87,88 94,87 100,87 C106,87 113,88 120,92 C118,100 110,105 100,106 C90,105 82,100 80,92 Z' },
+  // Chest — lower pec y:106-128, inside torso
+  { id: 'chest', muscles: ['Chest'],
+    d: 'M80,106 C86,108 93,110 100,110 C107,110 114,108 120,106 C120,116 116,124 100,126 C84,124 80,116 80,106 Z' },
+  // Serratus — along rib cage sides, inside torso edge y:110-130
+  { id: 'serratus', muscles: ['Serratus'],
+    d: 'M78,110 C80,116 80,124 78,130 C75,128 75,120 76,112 Z M122,110 C124,114 125,122 122,130 C120,124 120,116 122,110 Z' },
+  // Biceps — inside upper arm L: x:60-75 y:92-142, take front half
+  { id: 'biceps', muscles: ['Biceps','Brachialis'],
+    d: 'M68,96 C72,94 75,98 75,106 C75,116 73,128 70,136 C66,132 62,124 62,112 C62,104 65,98 68,96 Z M132,96 C136,98 138,104 138,112 C138,124 135,132 130,136 C127,128 125,116 125,106 C125,98 128,94 132,96 Z' },
+  // Forearms — exactly inside Forearm L: x:57-68 y:144-180, Forearm R: x:132-143 y:144-180
+  { id: 'forearms', muscles: ['Forearms'],
+    d: 'M62,146 C65,144 68,146 68,154 C68,164 66,174 63,178 C60,176 58,166 58,156 C58,150 60,146 62,146 Z M138,146 C140,144 142,150 143,156 C143,166 141,176 138,178 C135,174 132,164 132,154 C132,146 135,144 138,146 Z' },
+  // Upper abs — torso midsection x:82-118 y:128-146
+  { id: 'abs-upper', muscles: ['Upper Abs','Core'],
+    d: 'M88,128 C92,126 100,126 112,128 C113,136 112,144 110,148 C100,150 90,148 90,148 C88,144 87,136 88,128 Z' },
+  // Lower abs — torso x:84-116 y:148-162
+  { id: 'abs-lower', muscles: ['Lower Abs'],
+    d: 'M90,148 C94,150 100,150 110,148 C111,154 110,160 108,163 C100,165 92,163 92,163 C90,160 89,154 90,148 Z' },
+  // Obliques — sides of torso between lat and abs, x:76-88 and x:112-124, y:118-156
+  { id: 'obliques', muscles: ['Obliques'],
+    d: 'M80,120 C83,118 88,120 89,126 C89,136 88,148 86,156 C82,152 79,142 79,130 Z M111,126 C112,120 117,118 120,120 C121,130 121,152 114,156 C112,148 111,136 111,126 Z' },
+  // Hip flexors — hips region x:82-118 y:156-172
+  { id: 'hip-flexors', muscles: ['Hip Flexors'],
+    d: 'M88,158 C92,156 100,156 112,158 C114,164 113,170 110,174 C104,176 96,176 90,174 C87,170 86,164 88,158 Z' },
+  // Inner thighs — medial thigh between the two legs x:96-104 y:180-224
+  { id: 'inner-thighs', muscles: ['Inner Thighs'],
+    d: 'M96,182 C98,180 102,180 104,182 C105,194 104,210 102,222 C100,223 99,222 98,222 C96,210 95,194 96,182 Z' },
+  // Quads L — exactly inside Thigh L: x:84-100 y:180-228
+  { id: 'quads-l', muscles: ['Quads'],
+    d: 'M85,182 C88,180 96,180 99,183 C99,198 98,214 97,226 C93,228 87,226 85,223 C83,214 83,198 85,182 Z' },
+  // Quads R — exactly inside Thigh R: x:100-116 y:180-228
+  { id: 'quads-r', muscles: ['Quads'],
+    d: 'M101,183 C104,180 112,180 115,182 C117,198 117,214 115,223 C113,226 107,228 103,226 C102,214 101,198 101,183 Z' },
+  // Calves L — exactly inside Shin L: x:85-99 y:230-272
+  { id: 'calves-l', muscles: ['Calves'],
+    d: 'M86,232 C89,230 97,230 99,232 C99,246 98,258 96,270 C93,272 88,271 86,268 C84,256 84,244 86,232 Z' },
+  // Calves R — exactly inside Shin R: x:101-115 y:230-272
+  { id: 'calves-r', muscles: ['Calves'],
+    d: 'M101,232 C103,230 111,230 114,232 C116,244 116,256 114,268 C112,271 107,272 104,270 C102,258 101,246 101,232 Z' },
+];
+
+const BACK_ZONES = [
+  // Upper traps — torso top x:76-124 y:88, traps run from neck base to shoulder tip
+  { id: 'traps-upper', muscles: ['Upper Traps','Upper Back'],
+    d: 'M84,88 C90,84 96,83 100,83 C104,83 110,84 116,88 C112,94 106,96 100,96 C94,96 88,94 84,88 Z' },
+  // Mid traps / rhomboids — between shoulder blades x:86-114 y:96-122
+  { id: 'traps-mid', muscles: ['Upper Back','Mid Back'],
+    d: 'M87,98 C93,96 100,96 113,98 C114,108 113,118 110,122 C104,124 96,124 90,122 C87,118 86,108 87,98 Z' },
+  // Rear delts — sit ON upper arm top. Upper arm L starts M68,92, R starts M132,92
+  // Must stay within the arm silhouette, not bleed into torso
+  { id: 'rear-delts', muscles: ['Rear Delts','Rotator Cuff'],
+    d: 'M68,92 C64,96 61,104 61,112 C61,120 63,128 66,134 C70,130 74,120 75,112 C75,104 72,97 68,92 Z M132,92 C136,97 139,104 139,112 C139,120 136,130 134,134 C131,128 127,120 125,112 C125,104 128,96 132,92 Z' },
+  // Lats — sides of torso from armpit down. Torso left edge ~x:76-82, right edge ~x:118-124, y:100-155
+  { id: 'lats', muscles: ['Lats'],
+    d: 'M80,104 C77,110 76,122 77,136 C77,146 80,154 83,158 C86,154 88,142 88,128 C88,116 85,108 80,104 Z M120,104 C115,108 112,116 112,128 C112,142 114,154 117,158 C120,154 123,146 123,136 C124,122 123,110 120,104 Z' },
+  // Mid back — erector spinae, inside torso x:88-112 y:122-155
+  { id: 'mid-back-l', muscles: ['Mid Back','Lower Back'],
+    d: 'M88,122 C93,120 100,120 100,122 L100,156 C95,157 89,155 88,151 C87,142 87,132 88,122 Z' },
+  { id: 'mid-back-r', muscles: ['Mid Back','Lower Back'],
+    d: 'M100,122 C100,120 107,120 112,122 C113,132 113,142 112,151 C111,155 105,157 100,156 Z' },
+  // Triceps — back of upper arm EXACTLY within arm silhouette paths
+  // Upper arm L: M68,92 C64,96 60,106 60,120 C60,130 62,138 66,142 C70,138 74,128 75,116 C75,106 72,96 68,92
+  { id: 'triceps-l', muscles: ['Triceps'],
+    d: 'M68,94 C64,98 61,108 61,120 C61,130 63,137 66,141 C69,136 72,126 73,116 C74,106 72,98 68,94 Z' },
+  // Upper arm R: M132,92 C136,96 140,106 140,120 C140,130 138,138 134,142 C130,138 126,128 125,116 C125,106 128,96 132,92
+  { id: 'triceps-r', muscles: ['Triceps'],
+    d: 'M132,94 C136,98 139,106 139,116 C139,128 137,136 134,141 C131,137 127,130 127,120 C127,108 128,98 132,94 Z' },
+  // Glutes — hips: M82,156 C86,162 100,165 114,162 L116,180 C108,184 92,184 84,180 Z
+  { id: 'glutes', muscles: ['Glutes'],
+    d: 'M84,158 C90,156 100,156 116,158 C117,166 116,174 112,179 C106,183 94,183 88,179 C84,174 83,166 84,158 Z' },
+  // Hamstrings — exactly inside thigh silhouettes
+  // Thigh L: M84,180 C88,178 96,178 100,180 L98,228 C94,230 86,228 84,225 Z
+  { id: 'hamstrings-l', muscles: ['Hamstrings'],
+    d: 'M85,181 C88,179 96,179 99,182 C99,198 98,214 97,226 C93,229 87,227 85,224 C83,214 83,196 85,181 Z' },
+  // Thigh R: M100,180 C104,178 112,178 116,180 L116,225 C114,228 106,230 102,228 Z
+  { id: 'hamstrings-r', muscles: ['Hamstrings'],
+    d: 'M101,182 C104,179 112,179 115,181 C116,196 116,214 115,224 C113,227 107,229 103,226 C102,214 101,198 101,182 Z' },
+  // Calves — exactly inside shin silhouettes
+  // Shin L: M85,230 C89,228 97,228 99,231 L97,272 C93,274 87,273 85,270 Z
+  { id: 'calves-back-l', muscles: ['Calves'],
+    d: 'M86,231 C89,229 97,229 98,232 C98,248 97,260 96,271 C93,273 88,272 86,269 C84,258 84,246 86,231 Z' },
+  // Shin R: M101,231 C103,228 111,228 115,230 L115,270 C113,273 107,274 103,272 Z
+  { id: 'calves-back-r', muscles: ['Calves'],
+    d: 'M102,232 C103,229 111,229 114,231 C115,246 115,258 114,269 C112,272 107,273 104,271 C103,260 102,248 102,232 Z' },
+];
+
+// The body silhouette (same for both views — just the outline)
+const BODY_SILHOUETTE = `
+  <defs>
+    <linearGradient id="bodyGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1e1e30"/>
+      <stop offset="100%" stop-color="#16161e"/>
+    </linearGradient>
+  </defs>
+  <!-- Head -->
+  <ellipse cx="100" cy="52" rx="22" ry="26" fill="url(#bodyGrad)" stroke="rgba(255,255,255,0.15)" stroke-width="1.5"/>
+  <!-- Neck -->
+  <rect x="92" y="75" width="16" height="14" rx="3" fill="url(#bodyGrad)" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+  <!-- Torso -->
+  <path d="M76,88 C82,85 94,83 100,83 C106,83 118,85 124,88 L128,162 C118,166 100,167 82,162 Z" fill="url(#bodyGrad)" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+  <!-- Hips -->
+  <path d="M82,156 C86,162 100,165 114,162 L116,180 C108,184 92,184 84,180 Z" fill="url(#bodyGrad)" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+  <!-- Upper arm L -->
+  <path d="M68,92 C64,96 60,106 60,120 C60,130 62,138 66,142 C70,138 74,128 75,116 C75,106 72,96 68,92 Z" fill="url(#bodyGrad)" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+  <!-- Upper arm R -->
+  <path d="M132,92 C136,96 140,106 140,120 C140,130 138,138 134,142 C130,138 126,128 125,116 C125,106 128,96 132,92 Z" fill="url(#bodyGrad)" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+  <!-- Forearm L -->
+  <path d="M62,144 C59,148 57,158 57,168 C57,174 59,178 62,180 C66,176 68,166 68,156 C68,148 66,144 62,144 Z" fill="url(#bodyGrad)" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+  <!-- Forearm R -->
+  <path d="M138,144 C142,148 143,158 143,168 C143,176 141,180 138,180 C134,176 132,166 132,156 C132,148 134,144 138,144 Z" fill="url(#bodyGrad)" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+  <!-- Thigh L -->
+  <path d="M84,180 C88,178 96,178 100,180 L98,228 C94,230 86,228 84,225 Z" fill="url(#bodyGrad)" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+  <!-- Thigh R -->
+  <path d="M100,180 C104,178 112,178 116,180 L116,225 C114,228 106,230 102,228 Z" fill="url(#bodyGrad)" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+  <!-- Shin L -->
+  <path d="M85,230 C89,228 97,228 99,231 L97,272 C93,274 87,273 85,270 Z" fill="url(#bodyGrad)" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+  <!-- Shin R -->
+  <path d="M101,231 C103,228 111,228 115,230 L115,270 C113,273 107,274 103,272 Z" fill="url(#bodyGrad)" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+`;
+
+function buildMuscleSVG(primaryMuscles, secondaryMuscles, view) {
+  const zones = view === 'front' ? FRONT_ZONES : BACK_ZONES;
+
+  const normalize = s => s.toLowerCase().replace(/[^a-z]/g,'');
+  const isMatch = (zMuscles, targets) =>
+    zMuscles.some(zm => targets.some(t => normalize(zm).includes(normalize(t)) || normalize(t).includes(normalize(zm))));
+
+  const zonesSVG = zones.map(z => {
+    const isPrimary   = isMatch(z.muscles, primaryMuscles);
+    const isSecondary = !isPrimary && secondaryMuscles && isMatch(z.muscles, secondaryMuscles);
+    const fill   = isPrimary ? '#FF6B35' : isSecondary ? '#F59E0B' : 'rgba(255,255,255,0.05)';
+    const stroke = isPrimary ? '#FF6B35' : isSecondary ? '#F59E0B' : 'rgba(255,255,255,0.12)';
+    const opacity = isPrimary ? '0.85' : isSecondary ? '0.5' : '1';
+    return `<path d="${z.d}" fill="${fill}" stroke="${stroke}" stroke-width="0.8" opacity="${opacity}" stroke-linejoin="round"/>`;
+  }).join('');
+
+  return `<svg viewBox="52 24 96 256" xmlns="http://www.w3.org/2000/svg">
+    ${BODY_SILHOUETTE}
+    ${zonesSVG}
+  </svg>`;
+}
+
+function openMuscleModal(exName, musclesStr) {
+  const data = EXERCISE_MUSCLES[exName];
+  const primary   = data ? data.primary   : musclesStr.split(' · ');
+  const secondary = data ? data.secondary : [];
+
+  document.getElementById('muscle-modal-title').textContent = exName.toUpperCase();
+  document.getElementById('muscle-modal-sub').textContent = '🎯 Muscle activation map';
+
+  const frontSVG = buildMuscleSVG(primary, secondary, 'front');
+  const backSVG  = buildMuscleSVG(primary, secondary, 'back');
+
+  const primaryChips   = primary.map(m => `<span class="muscle-group-chip muscle-primary-chip">● ${m}</span>`).join('');
+  const secondaryChips = secondary.length ? secondary.map(m => `<span class="muscle-group-chip muscle-secondary-chip">○ ${m}</span>`).join('') : '';
+
+  document.getElementById('muscle-modal-body').innerHTML = `
+    <div class="muscle-figure-wrap">
+      <div style="text-align:center">
+        ${frontSVG}
+        <div style="font-size:9px;color:rgba(255,255,255,0.25);letter-spacing:1px;margin-top:4px;text-transform:uppercase">Front</div>
+      </div>
+      <div style="text-align:center">
+        ${backSVG}
+        <div style="font-size:9px;color:rgba(255,255,255,0.25);letter-spacing:1px;margin-top:4px;text-transform:uppercase">Back</div>
+      </div>
+    </div>
+    <div style="padding:0 18px 4px">
+      <div style="display:flex;gap:16px;margin-bottom:10px;font-size:10px;color:rgba(255,255,255,0.4)">
+        <span>🟠 Primary</span>${secondary.length ? '<span style="color:rgba(245,158,11,0.7)">🟡 Secondary</span>' : ''}
+      </div>
+      <div class="muscle-section-label">Primary muscles</div>
+      <div>${primaryChips}</div>
+      ${secondaryChips ? `<div class="muscle-section-label" style="margin-top:10px">Secondary / stabilizers</div><div>${secondaryChips}</div>` : ''}
+    </div>`;
+
+  document.getElementById('muscle-modal-overlay').classList.add('open');
+}
+
+function closeMuscleModal(e) {
+  if (e && e.target !== document.getElementById('muscle-modal-overlay')) return;
+  document.getElementById('muscle-modal-overlay').classList.remove('open');
+}
+
+// ── Completion Summary Modal ───────────────────────────────
+function showCompletionSummary(planDay, duration, volume, prs) {
+  const day = PLAN[planDay];
+  const totalExercises = day.exercises ? day.exercises.length : 0;
+
+  // Count completed exercises
+  const completedEx = day.exercises ? day.exercises.filter(ex => {
+    const k = exKey(planDay, ex.name);
+    const log = state.setLogs[k];
+    if (!log) return false;
+    const numSets = ex.progression ? getExSetsCount(planDay, ex.name) : ex.sets;
+    const doneSets = log.checked.filter(Boolean).length;
+    return doneSets === numSets;
+  }).length : 0;
+
+  const fmtDur = (sec) => {
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return m > 0 ? `${m}m ${s}s` : `${s}s`;
+  };
+
+  const emoji = completedEx === totalExercises ? '🎉' : '💪';
+  const title = completedEx === totalExercises ? 'PERFECT SESSION!' : 'SESSION COMPLETE!';
+  const subtitle = completedEx === totalExercises
+    ? 'All exercises crushed!'
+    : `${completedEx}/${totalExercises} exercises completed`;
+
+  document.getElementById('completion-emoji').textContent = emoji;
+  document.getElementById('completion-title').textContent = title;
+  document.getElementById('completion-subtitle').textContent = subtitle;
+
+  let stats = `
+    <div class="completion-stat">
+      <span class="completion-stat-label">⏱️ Duration</span>
+      <span class="completion-stat-value" style="color:#60B8FF">${duration > 0 ? fmtDur(duration) : '—'}</span>
+    </div>
+    <div class="completion-stat">
+      <span class="completion-stat-label">🏋️ Volume Lifted</span>
+      <span class="completion-stat-value" style="color:#FF6B35">${volume > 0 ? volume + ' lbs' : '—'}</span>
+    </div>
+    <div class="completion-stat">
+      <span class="completion-stat-label">✅ Exercises Done</span>
+      <span class="completion-stat-value" style="color:#34D399">${completedEx}/${totalExercises}</span>
+    </div>`;
+
+  if (prs && prs.length > 0) {
+    const prList = prs.map(pr => `<div style="font-size:12px;color:#F59E0B;margin-top:4px">🏆 ${pr}</div>`).join('');
+    stats += `<div class="completion-stat" style="flex-direction:column;align-items:flex-start">
+      <span class="completion-stat-label">New PRs!</span>
+      ${prList}
+    </div>`;
+  }
+
+  document.getElementById('completion-stats').innerHTML = stats;
+  document.getElementById('completion-modal-overlay').classList.add('open');
+}
+
+function closeCompletionModal(e) {
+  if (e && e.target !== document.getElementById('completion-modal-overlay')) return;
+  document.getElementById('completion-modal-overlay').classList.remove('open');
+}
+
+// ── Today's Quick Stats ────────────────────────────────────
+// ── Streak Calculator ──────────────────────────────────────
+function calculateStreaks() {
+  const completedDates = Object.keys(state.completed)
+    .map(key => {
+      const parts = key.split('-');
+      return new Date(parseInt(parts[0]), parseInt(parts[1]), parseInt(parts[2]));
+    })
+    .sort((a, b) => b - a); // Sort desc (newest first)
+
+  if (!completedDates.length) return { current: 0, longest: 0 };
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+
+  // Calculate current streak
+  let currentStreak = 0;
+  let checkDate = new Date(today);
+
+  // Check if today or yesterday is completed (to allow for flexibility)
+  const hasToday = completedDates.some(d => d.getTime() === today.getTime());
+  const hasYesterday = completedDates.some(d => d.getTime() === yesterday.getTime());
+
+  if (!hasToday && !hasYesterday) {
+    currentStreak = 0;
+  } else {
+    checkDate = hasToday ? today : yesterday;
+
+    while (true) {
+      const hasDate = completedDates.some(d => d.getTime() === checkDate.getTime());
+      if (!hasDate) break;
+      currentStreak++;
+      checkDate.setDate(checkDate.getDate() - 1);
+    }
+  }
+
+  // Calculate longest streak
+  let longestStreak = 0;
+  let tempStreak = 0;
+  let prevDate = null;
+
+  for (const date of completedDates.reverse()) {
+    if (!prevDate) {
+      tempStreak = 1;
+    } else {
+      const dayDiff = Math.floor((date - prevDate) / (1000 * 60 * 60 * 24));
+      if (dayDiff === 1) {
+        tempStreak++;
+      } else {
+        longestStreak = Math.max(longestStreak, tempStreak);
+        tempStreak = 1;
+      }
+    }
+    prevDate = date;
+  }
+  longestStreak = Math.max(longestStreak, tempStreak);
+
+  return { current: currentStreak, longest: longestStreak };
+}
+
+function buildTodayStats(planDay) {
+  const day = PLAN[planDay];
+  if (!day || !day.exercises) return '';
+
+  const totalEx = day.exercises.length;
+  let completedEx = 0;
+  day.exercises.forEach(ex => {
+    const k = exKey(planDay, ex.name);
+    const log = state.setLogs[k];
+    if (!log) return;
+
+    if (ex.progression) {
+      // Progression exercise: done if ANY single phase exercise has all its sets complete
+      const phases = ex.progression === 'pullup' ? PULLUP_PHASES : PUSHUP_PHASES;
+      const prog = getProgressionPhase(ex.progression);
+      const phase = phases[prog.phaseIndex];
+      const psc = phase.exercises.map(pe => parseInt(pe.sets) || 3);
+      const isDone = phase.exercises.some((pe, exIdx) => {
+        const offset = psc.slice(0, exIdx).reduce((a, b) => a + b, 0);
+        const numSets = psc[exIdx];
+        return Array.from({length: numSets}, (_, s) => log.checked[offset + s]).every(Boolean);
+      });
+      if (isDone) completedEx++;
+    } else {
+      const numSets = ex.sets;
+      const doneSets = log.checked.filter(Boolean).length;
+      if (doneSets === numSets) completedEx++;
+    }
+  });
+
+  const volume = computeSessionVolume(planDay);
+  const elapsed = getSessionElapsed();
+
+  const fmtDur = (sec) => {
+    const m = Math.floor(sec / 60);
+    return m > 0 ? `${m}m` : `${sec}s`;
+  };
+
+  const progressPct = totalEx > 0 ? Math.round((completedEx / totalEx) * 100) : 0;
+
+  return `<div class="today-stats-card">
+    <div style="font-size:10px;letter-spacing:2px;color:rgba(255,255,255,0.3);text-transform:uppercase;margin-bottom:10px">📊 Today's Progress</div>
+    <div class="today-stats-row">
+      <div class="today-stat-box">
+        <div class="today-stat-value" style="color:#FF6B35">${volume > 0 ? volume : '—'}</div>
+        <div class="today-stat-label">lbs lifted</div>
+      </div>
+      <div class="today-stat-box">
+        <div class="today-stat-value" style="color:#60B8FF">${elapsed > 0 ? fmtDur(elapsed) : '—'}</div>
+        <div class="today-stat-label">time</div>
+      </div>
+      <div class="today-stat-box">
+        <div class="today-stat-value" style="color:#34D399">${completedEx}/${totalEx}</div>
+        <div class="today-stat-label">exercises</div>
+      </div>
+      <div class="today-stat-box">
+        <div class="today-stat-value" style="color:#A78BFA">${progressPct}%</div>
+        <div class="today-stat-label">progress</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ── Weekly Recap (Sunday) ─────────────────────────────────
+function buildWeeklyRecap() {
+  const today = new Date();
+  const dayOfWeek = today.getDay(); // 0=Sun
+  const weekStart = new Date(today);
+  weekStart.setDate(today.getDate() - dayOfWeek);
+  weekStart.setHours(0,0,0,0);
+
+  // Collect this week's completed workouts
+  let workoutsThisWeek = 0;
+  let volumeThisWeek = 0;
+  let volumeLastWeek = 0;
+  const workoutDays = [];
+
+  for (const [key, planDay] of Object.entries(state.completed)) {
+    if (!planDay) continue;
+    const parts = key.split('-');
+    const d = new Date(parseInt(parts[0]), parseInt(parts[1]), parseInt(parts[2]));
+    d.setHours(0,0,0,0);
+    const lastWeekStart = new Date(weekStart);
+    lastWeekStart.setDate(weekStart.getDate() - 7);
+
+    if (d >= weekStart && d <= today) {
+      workoutsThisWeek++;
+      workoutDays.push(planDay);
+      volumeThisWeek += state.volume[key] || 0;
+    } else if (d >= lastWeekStart && d < weekStart) {
+      volumeLastWeek += state.volume[key] || 0;
+    }
+  }
+
+  const streaks = calculateStreaks();
+  const puProg = getProgressionPhase('pullup');
+  const puPhase = PULLUP_PHASES[puProg.phaseIndex];
+  const psProg = getProgressionPhase('pushup');
+  const psPhase = PUSHUP_PHASES[psProg.phaseIndex];
+  const volumeTrend = volumeLastWeek > 0
+    ? (volumeThisWeek > volumeLastWeek ? `↑ +${Math.round(volumeThisWeek - volumeLastWeek)} lbs vs last week` : volumeThisWeek < volumeLastWeek ? `↓ ${Math.round(volumeLastWeek - volumeThisWeek)} lbs vs last week` : '→ Same as last week')
+    : '';
+
+  return `
+  <div style="background:linear-gradient(135deg,rgba(96,184,255,0.12),rgba(96,184,255,0.04));border:1px solid rgba(96,184,255,0.3);border-radius:20px;padding:20px;margin-bottom:20px">
+    <div style="font-size:11px;letter-spacing:2px;color:rgba(255,255,255,0.4);text-transform:uppercase;margin-bottom:14px">🏆 This Week's Recap</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div style="background:rgba(255,255,255,0.05);border-radius:12px;padding:12px;text-align:center">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:36px;color:#60B8FF;line-height:1">${workoutsThisWeek}</div>
+        <div style="font-size:10px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1px">workouts</div>
+      </div>
+      <div style="background:rgba(255,255,255,0.05);border-radius:12px;padding:12px;text-align:center">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:36px;color:#FF6B35;line-height:1">${volumeThisWeek > 0 ? Math.round(volumeThisWeek) : '—'}</div>
+        <div style="font-size:10px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1px">lbs lifted</div>
+        ${volumeTrend ? `<div style="font-size:10px;color:${volumeThisWeek >= volumeLastWeek ? '#22c55e' : '#ef4444'};margin-top:2px">${volumeTrend}</div>` : ''}
+      </div>
+      <div style="background:rgba(255,255,255,0.05);border-radius:12px;padding:12px;text-align:center">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:36px;color:#f59e0b;line-height:1">${streaks.current}</div>
+        <div style="font-size:10px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1px">day streak</div>
+      </div>
+      <div style="background:rgba(255,255,255,0.05);border-radius:12px;padding:12px;text-align:center">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:#A78BFA;line-height:1;margin-top:4px">Ph.${puProg.phaseIndex + 1}</div>
+        <div style="font-size:10px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1px;margin-top:4px">pull-up phase</div>
+        <div style="font-size:9px;color:rgba(255,255,255,0.3);margin-top:2px">${puProg.sessionsIntoPhase}/${puProg.sessionsPerPhase} sessions</div>
+      </div>
+    </div>
+    ${workoutDays.length > 0 ? `
+    <div style="font-size:11px;color:rgba(255,255,255,0.35);margin-bottom:6px">This week you did:</div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px">
+      ${workoutDays.map(d => `<span style="background:${PLAN[d]?.color || '#60B8FF'}22;color:${PLAN[d]?.color || '#60B8FF'};border:1px solid ${PLAN[d]?.color || '#60B8FF'}44;border-radius:8px;padding:4px 10px;font-size:12px;font-weight:600">${PLAN[d]?.label || d}</span>`).join('')}
+    </div>` : '<div style="font-size:13px;color:rgba(255,255,255,0.3);text-align:center;padding:10px 0">No workouts logged yet this week</div>'}
+  </div>`;
+}
+
+// ── Stats Tab ─────────────────────────────────────────────
+function buildStatsTab() {
+  const streaks = calculateStreaks();
+  const puProg = getProgressionPhase('pullup');
+  const psProg = getProgressionPhase('pushup');
+
+  // Build volume data for last 8 weeks
+  const weeklyVolume = [];
+  const now = new Date();
+  for (let w = 7; w >= 0; w--) {
+    const wStart = new Date(now);
+    wStart.setDate(now.getDate() - now.getDay() - w * 7);
+    wStart.setHours(0,0,0,0);
+    const wEnd = new Date(wStart);
+    wEnd.setDate(wStart.getDate() + 6);
+    wEnd.setHours(23,59,59,999);
+    let vol = 0;
+    for (const [key, planDay] of Object.entries(state.completed)) {
+      if (!planDay) continue;
+      const parts = key.split('-');
+      const d = new Date(parseInt(parts[0]), parseInt(parts[1]), parseInt(parts[2]));
+      if (d >= wStart && d <= wEnd) vol += state.volume[key] || 0;
+    }
+    const label = w === 0 ? 'This week' : w === 1 ? 'Last week' : `${w}w ago`;
+    weeklyVolume.push({ label, vol: Math.round(vol) });
+  }
+
+  const maxVol = Math.max(...weeklyVolume.map(w => w.vol), 1);
+
+  // Total workouts ever
+  const totalWorkouts = Object.values(state.completed).filter(Boolean).length;
+  const totalVolume = Object.values(state.volume).reduce((a, b) => a + b, 0);
+
+  // History — last 10 completed days
+  const history = Object.entries(state.completed)
+    .filter(([, v]) => v)
+    .map(([key, planDay]) => {
+      const parts = key.split('-');
+      const d = new Date(parseInt(parts[0]), parseInt(parts[1]), parseInt(parts[2]));
+      return { key, planDay, date: d, vol: state.volume[key] || 0 };
+    })
+    .sort((a, b) => b.date - a.date)
+    .slice(0, 10);
+
+  return `
+  <div style="padding-bottom:20px">
+
+    <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:20px;padding:18px;margin-bottom:16px">
+      <div style="font-size:11px;letter-spacing:2px;color:rgba(255,255,255,0.3);text-transform:uppercase;margin-bottom:14px">All Time</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+        <div style="text-align:center">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:36px;color:#22c55e">${totalWorkouts}</div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:1px">workouts</div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:36px;color:#FF6B35">${totalVolume > 0 ? Math.round(totalVolume/1000) + 'k' : '—'}</div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:1px">lbs lifted</div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:36px;color:#f59e0b">${streaks.longest}</div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:1px">best streak</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:20px;padding:18px;margin-bottom:16px">
+      <div style="font-size:11px;letter-spacing:2px;color:rgba(255,255,255,0.3);text-transform:uppercase;margin-bottom:14px">Volume — Last 8 Weeks</div>
+      <div style="display:flex;align-items:flex-end;gap:6px;height:80px">
+        ${weeklyVolume.map((w, i) => {
+          const h = maxVol > 0 ? Math.max(Math.round((w.vol / maxVol) * 70), w.vol > 0 ? 4 : 0) : 0;
+          const isLatest = i === weeklyVolume.length - 1;
+          return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
+            <div style="font-size:9px;color:rgba(255,255,255,0.3)">${w.vol > 0 ? w.vol : ''}</div>
+            <div style="width:100%;height:${h}px;background:${isLatest ? '#FF6B35' : 'rgba(255,107,53,0.35)'};border-radius:4px 4px 0 0;min-height:${w.vol > 0 ? 4 : 0}px"></div>
+          </div>`;
+        }).join('')}
+      </div>
+      <div style="display:flex;gap:6px;margin-top:4px">
+        ${weeklyVolume.map((w, i) => `<div style="flex:1;font-size:8px;color:rgba(255,255,255,0.25);text-align:center;overflow:hidden">${i === weeklyVolume.length-1 ? 'Now' : i === weeklyVolume.length-2 ? '-1w' : ''}</div>`).join('')}
+      </div>
+    </div>
+
+    <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:20px;padding:18px;margin-bottom:16px">
+      <div style="font-size:11px;letter-spacing:2px;color:rgba(255,255,255,0.3);text-transform:uppercase;margin-bottom:14px">Progression</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+            <span style="font-size:13px;font-weight:600;color:#A78BFA">Pull-ups — Phase ${puProg.phaseIndex + 1}</span>
+            <span style="font-size:12px;color:rgba(255,255,255,0.4)">${puProg.sessionsIntoPhase}/${puProg.sessionsPerPhase} sessions</span>
+          </div>
+          <div style="height:6px;background:rgba(255,255,255,0.08);border-radius:10px;overflow:hidden">
+            <div style="height:100%;width:${Math.round(puProg.sessionsIntoPhase/puProg.sessionsPerPhase*100)}%;background:#A78BFA;border-radius:10px"></div>
+          </div>
+        </div>
+        <div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+            <span style="font-size:13px;font-weight:600;color:#FF6B35">Push-ups — Phase ${psProg.phaseIndex + 1}</span>
+            <span style="font-size:12px;color:rgba(255,255,255,0.4)">${psProg.sessionsIntoPhase}/${psProg.sessionsPerPhase} sessions</span>
+          </div>
+          <div style="height:6px;background:rgba(255,255,255,0.08);border-radius:10px;overflow:hidden">
+            <div style="height:100%;width:${Math.round(psProg.sessionsIntoPhase/psProg.sessionsPerPhase*100)}%;background:#FF6B35;border-radius:10px"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:20px;padding:18px;margin-bottom:16px">
+      <div style="font-size:11px;letter-spacing:2px;color:rgba(255,255,255,0.3);text-transform:uppercase;margin-bottom:14px">Recent History</div>
+      ${history.length === 0 ? '<div style="color:rgba(255,255,255,0.3);font-size:13px;text-align:center;padding:10px 0">No workouts logged yet</div>' : history.map(h => {
+        const c = PLAN[h.planDay]?.color || '#60B8FF';
+        const label = PLAN[h.planDay]?.label || h.planDay;
+        const dateStr = h.date.toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' });
+        return `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
+          <div>
+            <div style="font-size:13px;font-weight:600;color:${c}">${label}</div>
+            <div style="font-size:11px;color:rgba(255,255,255,0.35);margin-top:2px">${dateStr}</div>
+          </div>
+          ${h.vol > 0 ? `<div style="font-size:13px;font-weight:700;color:#FF6B35">${Math.round(h.vol)} lbs</div>` : ''}
+        </div>`;
+      }).join('')}
+    </div>
+
+    <button onclick="exportData()" style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:12px;color:rgba(255,255,255,0.6);font-size:13px;font-weight:700;padding:14px;cursor:pointer;font-family:'DM Sans',sans-serif">
+      💾 Export Workout Data
+    </button>
+  </div>`;
+}
+
+function exportData() {
+  const data = {
+    completed: state.completed,
+    setLogs: state.setLogs,
+    volume: state.volume,
+    prs: state.prs,
+    progPBs: state.progPBs,
+    sessionDurations: state.sessionDurations,
+    sessionNotes: state.sessionNotes,
+    exportedAt: new Date().toISOString(),
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'workout-data-' + new Date().toISOString().split('T')[0] + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ── Boot ──────────────────────────────────────────────────
+loadState();
+render();
+</script>
+</body>
+</html>

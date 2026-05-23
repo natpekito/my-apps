@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<title>Nutrition Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; background: #0d0d12; color: #fff; font-family: 'DM Sans', sans-serif; overflow-x: hidden; }
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+  input, textarea, button { font-family: 'DM Sans', sans-serif; }
+  a { text-decoration: none; color: inherit; }
+
+  #app { min-height: 100vh; padding-bottom: 80px; }
+
+  .header { padding: 30px 22px 20px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+  .header-title { font-family: 'Bebas Neue', sans-serif; font-size: 36px; letter-spacing: 2px; color: #fff; }
+  .header-sub { margin-top: 5px; font-size: 12px; color: rgba(255,255,255,0.35); }
+
+  .tabs { display: flex; border-bottom: 1px solid rgba(255,255,255,0.06); }
+  .tab-btn { flex: 1; padding: 13px 0; border: none; cursor: pointer; background: transparent; color: rgba(255,255,255,0.3); font-weight: 400; font-size: 13px; border-bottom: 2px solid transparent; transition: all 0.2s; }
+  .tab-btn.active { color: #fff; font-weight: 700; border-bottom-color: #fff; }
+
+  .content { padding: 18px 20px 0; }
+
+  .goal-card { background: linear-gradient(135deg, rgba(34,197,94,0.15), rgba(34,197,94,0.05)); border: 1px solid rgba(34,197,94,0.3); border-radius: 20px; padding: 20px; margin-bottom: 20px; }
+  .goal-num { font-family: 'Bebas Neue', sans-serif; font-size: 48px; color: #22c55e; line-height: 1; }
+  .goal-label { font-size: 12px; color: rgba(255,255,255,0.4); margin-top: 4px; }
+  .goal-bar { height: 12px; background: rgba(255,255,255,0.1); border-radius: 20px; margin-top: 16px; overflow: hidden; }
+  .goal-bar-fill { height: 100%; background: linear-gradient(90deg, #22c55e, #10b981); border-radius: 20px; transition: width 0.3s; }
+  .goal-settings { margin-top: 12px; display: flex; gap: 8px; align-items: center; }
+  .goal-input { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; padding: 6px 12px; color: #fff; font-size: 13px; width: 80px; outline: none; }
+
+  .add-food-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 16px; margin-bottom: 20px; }
+  .add-food-title { font-size: 11px; letter-spacing: 2px; color: rgba(255,255,255,0.3); text-transform: uppercase; margin-bottom: 10px; }
+  .add-food-input { width: 100%; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; padding: 12px; color: #fff; font-size: 14px; outline: none; margin-bottom: 10px; }
+  .protein-input-row { display: flex; gap: 8px; margin-bottom: 10px; }
+  .add-btn { width: 100%; background: linear-gradient(135deg, #22c55e, #10b981); border: none; border-radius: 10px; padding: 12px; color: #fff; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+  .add-btn:active { transform: scale(0.98); }
+
+  .quick-foods { margin-bottom: 20px; }
+  .quick-foods-title { font-size: 11px; letter-spacing: 2px; color: rgba(255,255,255,0.3); text-transform: uppercase; margin-bottom: 10px; }
+  .quick-foods-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .quick-food-btn { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 12px; cursor: pointer; transition: all 0.2s; text-align: left; }
+  .quick-food-btn:active { background: rgba(255,255,255,0.12); }
+  .quick-food-name { font-size: 13px; font-weight: 600; color: #fff; margin-bottom: 2px; }
+  .quick-food-protein { font-size: 11px; color: #22c55e; }
+
+  .meals-section { margin-bottom: 20px; }
+  .meal-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 14px 16px; margin-bottom: 10px; }
+  .meal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .meal-title { font-size: 14px; font-weight: 700; color: #fff; }
+  .meal-total { font-family: 'Bebas Neue', sans-serif; font-size: 20px; color: #22c55e; }
+  .food-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+  .food-item:last-child { border-bottom: none; }
+  .food-name { font-size: 13px; color: rgba(255,255,255,0.8); }
+  .food-protein { font-size: 12px; font-weight: 600; color: #22c55e; }
+  .food-delete { background: none; border: none; color: rgba(239,68,68,0.6); font-size: 16px; cursor: pointer; padding: 0 8px; }
+
+  .calendar-wrap { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 18px 16px; margin-bottom: 20px; }
+  .cal-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .cal-nav-btn { background: none; border: none; color: rgba(255,255,255,0.4); font-size: 22px; cursor: pointer; padding: 4px 10px; line-height: 1; }
+  .cal-month { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 2px; }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+  .cal-day-label { text-align: center; font-size: 9px; color: rgba(255,255,255,0.22); font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 2px 0 6px; }
+  .cal-cell { aspect-ratio: 1; border-radius: 9px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; border: 1px solid transparent; cursor: pointer; }
+  .cal-num { font-size: 11px; font-weight: 500; color: rgba(255,255,255,0.6); }
+  .cal-protein { font-size: 8px; color: #22c55e; margin-top: 2px; font-weight: 700; }
+
+  .stats-row { display: flex; gap: 10px; margin-top: 14px; }
+  .stat-box { flex: 1; background: rgba(255,255,255,0.04); border-radius: 12px; padding: 10px; text-align: center; }
+  .stat-num { font-family: 'Bebas Neue', sans-serif; font-size: 24px; color: #22c55e; }
+  .stat-lbl { font-size: 10px; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 1px; }
+
+  .meal-selector { display: flex; gap: 6px; margin-bottom: 10px; }
+  .meal-btn { flex: 1; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 8px; font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.5); cursor: pointer; transition: all 0.2s; }
+  .meal-btn.active { background: #22c55e; border-color: #22c55e; color: #fff; }
+
+  .goals-grid { display: grid; grid-template-columns: 1fr; gap: 12px; margin-bottom: 20px; }
+  .mini-goal-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 16px; }
+  .mini-goal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .mini-goal-title { font-size: 12px; font-weight: 700; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 1px; }
+  .mini-goal-value { font-family: 'Bebas Neue', sans-serif; font-size: 32px; color: #3b82f6; line-height: 1; }
+  .mini-goal-value.fiber { color: #f59e0b; }
+  .mini-goal-bar { height: 8px; background: rgba(255,255,255,0.1); border-radius: 20px; overflow: hidden; }
+  .mini-goal-bar-fill { height: 100%; border-radius: 20px; transition: width 0.3s; }
+  .mini-goal-bar-fill.water { background: linear-gradient(90deg, #3b82f6, #2563eb); }
+  .mini-goal-bar-fill.fiber { background: linear-gradient(90deg, #f59e0b, #d97706); }
+
+  .water-buttons { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 12px; }
+  .water-btn { background: rgba(59,130,246,0.15); border: 1px solid rgba(59,130,246,0.3); border-radius: 10px; padding: 10px; color: #3b82f6; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+  .water-btn:active { background: rgba(59,130,246,0.3); }
+  .water-controls { display: flex; gap: 8px; margin-top: 8px; align-items: center; }
+  .water-input { background: rgba(255,255,255,0.08); border: 1px solid rgba(59,130,246,0.3); border-radius: 8px; padding: 8px 12px; color: #3b82f6; font-size: 14px; width: 80px; outline: none; font-weight: 700; text-align: center; }
+  .reset-btn { background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); border-radius: 8px; padding: 8px 12px; color: #ef4444; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+  .reset-btn:active { background: rgba(239,68,68,0.3); }
+
+  .collapsible-section { margin-bottom: 20px; }
+  .collapse-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; cursor: pointer; user-select: none; }
+  .collapse-toggle { font-size: 18px; color: rgba(255,255,255,0.4); transition: transform 0.2s; }
+  .collapse-toggle.open { transform: rotate(90deg); }
+
+  .streak-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(251,146,60,0.15); border: 1px solid rgba(251,146,60,0.3); border-radius: 20px; padding: 6px 12px; font-size: 12px; font-weight: 700; color: #fb923c; margin-top: 8px; }
+
+  .water-btn.subtract { background: rgba(239,68,68,0.15); border-color: rgba(239,68,68,0.3); color: #ef4444; }
+  .water-btn.subtract:active { background: rgba(239,68,68,0.3); }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+const STORAGE_KEY = 'natalia-nutrition-tracker';
+const PROTEIN_GOAL_KEY = 'natalia-protein-goal';
+const FIBER_GOAL_KEY = 'natalia-fiber-goal';
+const WATER_GOAL_KEY = 'natalia-water-goal';
+
+const QUICK_FOODS = {
+  'Egg (1 large)': 6,
+  'Chicken breast (100g)': 31,
+  'Greek yogurt (1 cup)': 20,
+  'Protein shake': 25,
+  'Salmon (100g)': 25,
+  'Turkey breast (100g)': 29,
+  'Cottage cheese (1 cup)': 28,
+  'Tuna (1 can)': 20,
+  'Tofu (100g)': 8,
+  'Peanut butter (2 tbsp)': 8,
+  'Almonds (1 oz)': 6,
+  'Milk (1 cup)': 8,
+  'Beef (100g)': 26,
+  'Pork chop (100g)': 25,
+  'Lentils (1 cup cooked)': 18,
+  'Black beans (1 cup)': 15,
+};
+
+// Expanded food database for auto-calculation - [protein, fiber]
+const FOOD_DATABASE = {
+  // Eggs & Dairy
+  'egg': [6, 0], 'eggs': [6, 0], 'boiled egg': [6, 0], 'fried egg': [6, 0], 'scrambled egg': [6, 0],
+  'greek yogurt': [20, 0], 'yogurt': [10, 0], 'cottage cheese': [28, 0], 'cheese': [7, 0], 'cheddar': [7, 0],
+  'milk': [8, 0], 'almond milk': [1, 0], 'protein shake': [25, 0], 'whey': [25, 0],
+  'orgain': [10.5, 0], 'orgain protein': [10.5, 0], 'protein scoop': [10.5, 0], 'scoop': [10.5, 0],
+
+  // Poultry
+  'chicken': [31, 0], 'chicken breast': [31, 0], 'grilled chicken': [31, 0], 'baked chicken': [31, 0],
+  'turkey': [29, 0], 'turkey breast': [29, 0], 'ground turkey': [25, 0],
+
+  // Meat
+  'beef': [26, 0], 'steak': [26, 0], 'ground beef': [26, 0], 'hamburger': [20, 2],
+  'pork': [25, 0], 'pork chop': [25, 0], 'bacon': [3, 0], 'sausage': [5, 0],
+  'ham': [18, 0], 'deli meat': [10, 0],
+
+  // Fish & Seafood
+  'salmon': [25, 0], 'tuna': [20, 0], 'tuna can': [20, 0], 'tilapia': [23, 0],
+  'cod': [20, 0], 'shrimp': [24, 0], 'crab': [20, 0],
+
+  // Plant-based (high fiber!)
+  'tofu': [8, 2], 'tempeh': [19, 0], 'edamame': [18, 8],
+  'lentils': [18, 16], 'black beans': [15, 15], 'chickpeas': [15, 12], 'kidney beans': [15, 13],
+  'peanut butter': [8, 2], 'almond butter': [7, 3], 'almonds': [6, 4], 'nuts': [5, 3],
+  'quinoa': [8, 5], 'oats': [5, 4], 'oatmeal': [5, 4],
+
+  // Common meals
+  'protein bar': [20, 3], 'granola bar': [3, 2],
+  'pasta': [7, 2], 'rice': [4, 1], 'bread': [3, 1], 'toast': [3, 1],
+  'pizza slice': [12, 2], 'burger': [25, 2], 'burrito': [20, 8],
+  'egg sandwich': [18, 2], 'chicken sandwich': [30, 2], 'tuna sandwich': [20, 2],
+  'salad': [3, 2], 'chicken salad': [30, 3], 'caesar salad': [10, 2],
+
+  // Fruits & Vegetables (fiber!)
+  'apple': [0, 4], 'banana': [1, 3], 'orange': [1, 3], 'berries': [1, 8], 'strawberries': [1, 3],
+  'broccoli': [3, 5], 'spinach': [3, 2], 'carrots': [1, 3], 'sweet potato': [2, 4],
+  'avocado': [2, 10], 'peas': [5, 9],
+
+  // Seeds
+  'flax seeds': [2, 3], 'chia seeds': [2, 5], 'pb powder': [8, 2], 'peanut butter powder': [8, 2],
+
+  // Custom recipes
+  'protein smoothie': [28, 23], 'my protein smoothie': [28, 23], 'smoothie': [28, 23],
+};
+
+function estimateNutrition(foodName) {
+  const name = foodName.toLowerCase().trim();
+
+  // Direct match - returns [protein, fiber]
+  if (FOOD_DATABASE[name]) return FOOD_DATABASE[name];
+
+  // Check if any key is contained in the food name
+  for (const [key, nutrition] of Object.entries(FOOD_DATABASE)) {
+    if (name.includes(key)) return nutrition;
+  }
+
+  // Check for numbers (e.g., "2 eggs", "3 chicken breast")
+  const numberMatch = name.match(/^(\d+)\s+(.+)/);
+  if (numberMatch) {
+    const count = parseInt(numberMatch[1]);
+    const food = numberMatch[2];
+    const baseNutrition = estimateNutrition(food);
+    if (baseNutrition) return [baseNutrition[0] * count, baseNutrition[1] * count];
+  }
+
+  return null;
+}
+
+let state = {
+  view: 'today',
+  proteinGoal: 140,
+  fiberGoal: 30,
+  waterGoal: 100,
+  selectedMeal: 'breakfast',
+  quickFoodsExpanded: false,
+  data: {}, // { 'YYYY-M-D': { breakfast: [{name, protein, fiber}], ..., totalProtein: N, totalFiber: N, water: N } }
+  calYear: new Date().getFullYear(),
+  calMonth: new Date().getMonth(),
+};
+
+function loadState() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      state.data = parsed.data || {};
+    }
+  } catch(e) {}
+
+  try {
+    const proteinGoal = localStorage.getItem(PROTEIN_GOAL_KEY);
+    if (proteinGoal) state.proteinGoal = parseInt(proteinGoal);
+    const fiberGoal = localStorage.getItem(FIBER_GOAL_KEY);
+    if (fiberGoal) state.fiberGoal = parseInt(fiberGoal);
+    const waterGoal = localStorage.getItem(WATER_GOAL_KEY);
+    if (waterGoal) state.waterGoal = parseInt(waterGoal);
+  } catch(e) {}
+}
+
+function saveState() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ data: state.data }));
+    localStorage.setItem(PROTEIN_GOAL_KEY, state.proteinGoal.toString());
+    localStorage.setItem(FIBER_GOAL_KEY, state.fiberGoal.toString());
+    localStorage.setItem(WATER_GOAL_KEY, state.waterGoal.toString());
+  } catch(e) {}
+}
+
+function dateKey(d) {
+  return d.getFullYear() + '-' + d.getMonth() + '-' + d.getDate();
+}
+
+function todayKey() {
+  return dateKey(new Date());
+}
+
+function getTodayData() {
+  const k = todayKey();
+  if (!state.data[k]) {
+    state.data[k] = {
+      breakfast: [], lunch: [], dinner: [], snacks: [],
+      totalProtein: 0, totalFiber: 0, water: 0
+    };
+  }
+  return state.data[k];
+}
+
+function addFood(name, protein, fiber, meal) {
+  const today = getTodayData();
+  today[meal].push({ name, protein: parseFloat(protein), fiber: parseFloat(fiber) || 0 });
+  recalculateTotal(today);
+  saveState();
+  render();
+}
+
+function deleteFood(meal, index) {
+  const today = getTodayData();
+  today[meal].splice(index, 1);
+  recalculateTotal(today);
+  saveState();
+  render();
+}
+
+function recalculateTotal(dayData) {
+  dayData.totalProtein = ['breakfast', 'lunch', 'dinner', 'snacks']
+    .reduce((sum, meal) => sum + dayData[meal].reduce((s, f) => s + f.protein, 0), 0);
+  dayData.totalFiber = ['breakfast', 'lunch', 'dinner', 'snacks']
+    .reduce((sum, meal) => sum + dayData[meal].reduce((s, f) => s + f.fiber, 0), 0);
+}
+
+function addWater(oz) {
+  const today = getTodayData();
+  today.water = Math.max((today.water || 0) + oz, 0); // Don't go below 0
+  saveState();
+  render();
+}
+
+function setWater(oz) {
+  const today = getTodayData();
+  today.water = parseInt(oz) || 0;
+  saveState();
+  render();
+}
+
+function resetWater() {
+  if (confirm('Reset water intake to 0oz?')) {
+    const today = getTodayData();
+    today.water = 0;
+    saveState();
+    render();
+  }
+}
+
+function setProteinGoal(val) {
+  state.proteinGoal = parseInt(val) || 140;
+  saveState();
+  render();
+}
+
+function setFiberGoal(val) {
+  state.fiberGoal = parseInt(val) || 30;
+  saveState();
+  render();
+}
+
+function setWaterGoal(val) {
+  state.waterGoal = parseInt(val) || 100;
+  saveState();
+  render();
+}
+
+function render() {
+  document.getElementById('app').innerHTML = buildApp();
+}
+
+function buildApp() {
+  return `
+  <div class="header">
+    <div class="header-title">🥗 NUTRITION TRACKER</div>
+    <div class="header-sub">Track protein, fiber, and water</div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn ${state.view === 'today' ? 'active' : ''}" onclick="setView('today')">📊 Today</button>
+    <button class="tab-btn ${state.view === 'calendar' ? 'active' : ''}" onclick="setView('calendar')">📅 Calendar</button>
+  </div>
+
+  <div class="content">
+    ${state.view === 'today' ? buildTodayView() : buildCalendarView()}
+  </div>`;
+}
+
+function buildTodayView() {
+  const today = getTodayData();
+  const proteinProgress = Math.min((today.totalProtein / state.proteinGoal) * 100, 100);
+  const proteinRemaining = Math.max(state.proteinGoal - today.totalProtein, 0);
+  const streak = calculateStreak();
+
+  // Auto-select meal based on time if not manually changed
+  if (!state.selectedMeal) {
+    state.selectedMeal = autoSelectMeal();
+  }
+
+  return `
+  <div class="goal-card">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+      <div>
+        <div class="goal-num">${Math.round(today.totalProtein)}g</div>
+        <div class="goal-label">of ${state.proteinGoal}g protein goal</div>
+        ${streak > 0 ? `<div class="streak-badge">🔥 ${streak} day${streak > 1 ? 's' : ''} streak</div>` : ''}
+      </div>
+      <div style="text-align:right;">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:rgba(255,255,255,0.6);">${Math.round(proteinRemaining)}g</div>
+        <div class="goal-label">remaining</div>
+      </div>
+    </div>
+    <div class="goal-bar">
+      <div class="goal-bar-fill" style="width:${proteinProgress}%"></div>
+    </div>
+    <div class="goal-settings">
+      <span style="font-size:12px;color:rgba(255,255,255,0.4);">Daily goal:</span>
+      <input class="goal-input" type="number" value="${state.proteinGoal}" onchange="setProteinGoal(this.value)" />
+      <span style="font-size:12px;color:rgba(255,255,255,0.4);">grams</span>
+    </div>
+  </div>
+
+  <div class="goals-grid">
+    <div class="mini-goal-card">
+      <div class="mini-goal-header">
+        <div class="mini-goal-title">💧 Water</div>
+        <div class="mini-goal-value">${Math.round(today.water || 0)}oz <span style="font-size:16px;color:rgba(255,255,255,0.3);">/ ${state.waterGoal}oz</span></div>
+      </div>
+      <div class="mini-goal-bar">
+        <div class="mini-goal-bar-fill water" style="width:${Math.min((today.water || 0) / state.waterGoal * 100, 100)}%"></div>
+      </div>
+      <div class="water-buttons">
+        <button class="water-btn subtract" onclick="addWater(-8)">- 8oz</button>
+        <button class="water-btn" onclick="addWater(8)">+ 8oz</button>
+        <button class="water-btn" onclick="addWater(16)">+ 16oz</button>
+        <button class="water-btn" onclick="addWater(24)">+ 24oz</button>
+      </div>
+      <div class="water-controls">
+        <span style="font-size:11px;color:rgba(255,255,255,0.4);">Set:</span>
+        <input class="water-input" type="number" value="${Math.round(today.water || 0)}" onchange="setWater(this.value)" />
+        <span style="font-size:11px;color:rgba(255,255,255,0.4);">oz</span>
+        <button class="reset-btn" onclick="resetWater()">Reset</button>
+      </div>
+    </div>
+
+    <div class="mini-goal-card">
+      <div class="mini-goal-header">
+        <div class="mini-goal-title">🌾 Fiber</div>
+        <div class="mini-goal-value fiber">${Math.round(today.totalFiber)}g <span style="font-size:16px;color:rgba(255,255,255,0.3);">/ ${state.fiberGoal}g</span></div>
+      </div>
+      <div class="mini-goal-bar">
+        <div class="mini-goal-bar-fill fiber" style="width:${Math.min((today.totalFiber / state.fiberGoal) * 100, 100)}%"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="add-food-card">
+    <div class="add-food-title">➕ Add Food</div>
+    <div class="meal-selector">
+      <button class="meal-btn ${state.selectedMeal === 'breakfast' ? 'active' : ''}" onclick="setMeal('breakfast')">Breakfast</button>
+      <button class="meal-btn ${state.selectedMeal === 'lunch' ? 'active' : ''}" onclick="setMeal('lunch')">Lunch</button>
+      <button class="meal-btn ${state.selectedMeal === 'dinner' ? 'active' : ''}" onclick="setMeal('dinner')">Dinner</button>
+      <button class="meal-btn ${state.selectedMeal === 'snacks' ? 'active' : ''}" onclick="setMeal('snacks')">Snacks</button>
+    </div>
+    <input id="food-name-input" class="add-food-input" type="text" placeholder="Type food (e.g., 2 eggs, chicken sandwich)" oninput="autoCalculateNutrition()" />
+    <div class="protein-input-row">
+      <input id="protein-input" class="add-food-input" type="number" placeholder="Protein (g)" style="flex:1;" />
+      <input id="fiber-input" class="add-food-input" type="number" placeholder="Fiber (g)" style="flex:1;" />
+      <button class="add-btn" style="width:auto;padding:12px 20px;" onclick="addFoodManual()">Add</button>
+    </div>
+  </div>
+
+  <div class="collapsible-section">
+    <div class="collapse-header" onclick="toggleQuickFoods()">
+      <div class="quick-foods-title">⚡ Quick Add</div>
+      <div class="collapse-toggle ${state.quickFoodsExpanded ? 'open' : ''}">▶</div>
+    </div>
+    ${state.quickFoodsExpanded ? `
+      <div class="quick-foods-grid">
+        ${Object.entries(QUICK_FOODS).slice(0, 8).map(([name, protein]) => `
+          <button class="quick-food-btn" onclick="addQuickFood('${name.replace(/'/g, "\\'")}', ${protein})">
+            <div class="quick-food-name">${name}</div>
+            <div class="quick-food-protein">${protein}g protein</div>
+          </button>
+        `).join('')}
+      </div>
+    ` : ''}
+  </div>
+
+  <div class="meals-section">
+    ${buildMealCard('Breakfast', 'breakfast', today)}
+    ${buildMealCard('Lunch', 'lunch', today)}
+    ${buildMealCard('Dinner', 'dinner', today)}
+    ${buildMealCard('Snacks', 'snacks', today)}
+  </div>`;
+}
+
+function buildMealCard(title, meal, data) {
+  const mealData = data[meal] || [];
+  const totalProtein = mealData.reduce((sum, f) => sum + f.protein, 0);
+  const totalFiber = mealData.reduce((sum, f) => sum + f.fiber, 0);
+
+  if (mealData.length === 0) return '';
+
+  return `
+  <div class="meal-card">
+    <div class="meal-header">
+      <div class="meal-title">${title}</div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <div class="meal-total">${Math.round(totalProtein)}g</div>
+        ${totalFiber > 0 ? `<div style="font-size:12px;color:#f59e0b;font-weight:600;">${Math.round(totalFiber)}g fiber</div>` : ''}
+      </div>
+    </div>
+    ${mealData.map((food, i) => `
+      <div class="food-item">
+        <div class="food-name">${food.name}</div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div class="food-protein">${food.protein}g${food.fiber > 0 ? ` • ${food.fiber}g fiber` : ''}</div>
+          <button class="food-delete" onclick="deleteFood('${meal}', ${i})">✕</button>
+        </div>
+      </div>
+    `).join('')}
+  </div>`;
+}
+
+function buildCalendarView() {
+  const year = state.calYear;
+  const month = state.calMonth;
+  const monthName = new Date(year, month, 1).toLocaleString('default', { month: 'long' });
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+  const dayLabels = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const labels = dayLabels.map(d => `<div class="cal-day-label">${d}</div>`).join('');
+
+  let cells = '';
+  for (let i = 0; i < firstDay; i++) cells += '<div></div>';
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    const date = new Date(year, month, d);
+    const key = dateKey(date);
+    const dayData = state.data[key];
+    const protein = dayData ? Math.round(dayData.totalProtein || dayData.total || 0) : 0;
+    const today = dateKey(new Date()) === key;
+
+    let cellStyle = '';
+    if (today) cellStyle = 'background:rgba(255,255,255,0.1);border:1.5px solid rgba(255,255,255,0.35);';
+    if (protein > 0) cellStyle = 'background:rgba(34,197,94,0.15);border:1.5px solid rgba(34,197,94,0.4);';
+
+    cells += `<div class="cal-cell" style="${cellStyle}">
+      <span class="cal-num">${d}</span>
+      ${protein > 0 ? `<span class="cal-protein">${protein}g</span>` : ''}
+    </div>`;
+  }
+
+  // Stats
+  const thisMonthData = Object.entries(state.data)
+    .filter(([key]) => {
+      const parts = key.split('-');
+      return parseInt(parts[0]) === year && parseInt(parts[1]) === month;
+    })
+    .map(([_, data]) => data);
+
+  const avgProtein = thisMonthData.length ? Math.round(thisMonthData.reduce((a,b) => a+(b.totalProtein || b.total || 0), 0) / thisMonthData.length) : 0;
+  const daysTracked = thisMonthData.length;
+  const daysOnGoal = thisMonthData.filter(d => (d.totalProtein || d.total || 0) >= state.proteinGoal).length;
+
+  return `
+  <div class="calendar-wrap">
+    <div class="cal-nav">
+      <button class="cal-nav-btn" onclick="calPrev()">‹</button>
+      <div class="cal-month">${monthName} ${year}</div>
+      <button class="cal-nav-btn" onclick="calNext()">›</button>
+    </div>
+    <div class="cal-grid">${labels}${cells}</div>
+    <div class="stats-row">
+      <div class="stat-box">
+        <div class="stat-num">${avgProtein}g</div>
+        <div class="stat-lbl">Avg/day</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num">${daysTracked}</div>
+        <div class="stat-lbl">Days tracked</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num">${daysOnGoal}</div>
+        <div class="stat-lbl">Hit goal</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function setView(v) {
+  state.view = v;
+  render();
+}
+
+function setMeal(m) {
+  state.selectedMeal = m;
+  render();
+}
+
+function autoSelectMeal() {
+  const hour = new Date().getHours();
+  if (hour >= 5 && hour < 11) return 'breakfast';
+  if (hour >= 11 && hour < 16) return 'lunch';
+  if (hour >= 16 && hour < 21) return 'dinner';
+  return 'snacks';
+}
+
+function toggleQuickFoods() {
+  state.quickFoodsExpanded = !state.quickFoodsExpanded;
+  render();
+}
+
+function calculateStreak() {
+  const sortedDates = Object.keys(state.data)
+    .map(key => {
+      const parts = key.split('-');
+      return new Date(parseInt(parts[0]), parseInt(parts[1]), parseInt(parts[2]));
+    })
+    .sort((a, b) => b - a);
+
+  let streak = 0;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  for (let i = 0; i < sortedDates.length; i++) {
+    const checkDate = new Date(today);
+    checkDate.setDate(today.getDate() - i);
+
+    const found = sortedDates.find(d =>
+      d.getFullYear() === checkDate.getFullYear() &&
+      d.getMonth() === checkDate.getMonth() &&
+      d.getDate() === checkDate.getDate()
+    );
+
+    if (!found) break;
+
+    const key = dateKey(found);
+    const dayData = state.data[key];
+    if ((dayData.totalProtein || dayData.total || 0) >= state.proteinGoal) {
+      streak++;
+    } else {
+      break;
+    }
+  }
+
+  return streak;
+}
+
+function addFoodManual() {
+  const nameInput = document.getElementById('food-name-input');
+  const proteinInput = document.getElementById('protein-input');
+  const fiberInput = document.getElementById('fiber-input');
+
+  const name = nameInput.value.trim();
+  const protein = parseFloat(proteinInput.value);
+  const fiber = parseFloat(fiberInput.value) || 0;
+
+  if (!name || !protein || protein <= 0) {
+    alert('Please enter food name and protein amount');
+    return;
+  }
+
+  addFood(name, protein, fiber, state.selectedMeal);
+  nameInput.value = '';
+  proteinInput.value = '';
+  fiberInput.value = '';
+}
+
+function addQuickFood(name, protein) {
+  addFood(name, protein, 0, state.selectedMeal);
+}
+
+function calPrev() {
+  state.calMonth--;
+  if (state.calMonth < 0) {
+    state.calMonth = 11;
+    state.calYear--;
+  }
+  render();
+}
+
+function calNext() {
+  state.calMonth++;
+  if (state.calMonth > 11) {
+    state.calMonth = 0;
+    state.calYear++;
+  }
+  render();
+}
+
+function autoCalculateNutrition() {
+  const nameInput = document.getElementById('food-name-input');
+  const proteinInput = document.getElementById('protein-input');
+  const fiberInput = document.getElementById('fiber-input');
+
+  const foodName = nameInput.value.trim();
+  if (!foodName) {
+    proteinInput.value = '';
+    fiberInput.value = '';
+    return;
+  }
+
+  const estimated = estimateNutrition(foodName);
+  if (estimated) {
+    proteinInput.value = estimated[0];
+    fiberInput.value = estimated[1];
+  } else {
+    proteinInput.value = '';
+    fiberInput.value = '';
+  }
+}
+
+loadState();
+render();
+</script>
+</body>
+</html>
