@@ -834,10 +834,9 @@ function addRestTime(sec) {
 let sessionTimerInterval = null;
 
 function getSessionElapsed() {
-  // Returns elapsed seconds accounting for pauses
-  if (!state.sessionStart) return 0;
+  if (!state.sessionStart && !state.sessionElapsedBeforePause) return 0;
   if (state.sessionPaused) return Math.floor(state.sessionElapsedBeforePause / 1000);
-  return Math.floor((state.sessionElapsedBeforePause + (Date.now() - state.sessionStart)) / 1000);
+  return Math.floor((state.sessionElapsedBeforePause + (Date.now() - (state.sessionStart || Date.now()))) / 1000);
 }
 
 function startSessionTimer() {
@@ -861,15 +860,14 @@ function pauseSessionTimer() {
     saveSessionState();
     sessionTimerInterval = setInterval(updateSessionTimerUI, 1000);
   } else {
-    // Pause
+    // Pause — accumulate elapsed so far, then freeze
     state.sessionElapsedBeforePause += Date.now() - (state.sessionStart || Date.now());
+    state.sessionStart = Date.now(); // keep a valid value so getSessionElapsed doesn't break
     state.sessionPaused = true;
-    state.sessionStart = null;
     saveSessionState();
     if (sessionTimerInterval) clearInterval(sessionTimerInterval);
   }
   updateSessionTimerUI();
-  // Update pause button text without full re-render
   const btn = document.getElementById('session-pause-btn');
   if (btn) btn.textContent = state.sessionPaused ? '▶' : '⏸';
 }
