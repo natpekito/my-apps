@@ -738,10 +738,10 @@ function startRestTimer(seconds, color) {
   showRestTimer();
   restTimer.interval = setInterval(() => {
     if (restTimer.paused) return;
-    const remaining = Math.round((restTimer.endTime - Date.now()) / 1000);
-    restTimer.remaining = Math.max(remaining, 0);
+    const remaining = Math.max(Math.round((restTimer.endTime - Date.now()) / 1000), 0);
+    restTimer.remaining = remaining;
     updateRestTimerUI();
-    if (restTimer.remaining <= 0) {
+    if (remaining <= 0) {
       clearInterval(restTimer.interval);
       restTimer.active = false;
       fireTimerDoneAlert();
@@ -754,15 +754,17 @@ function startRestTimer(seconds, color) {
 }
 
 function pauseRestTimer() {
-  if (!restTimer.active) return;
+  if (!restTimer.active && !restTimer.paused) return;
   if (restTimer.paused) {
-    // Resume
+    // Resume — push endTime forward from now
     restTimer.endTime = Date.now() + restTimer.pausedRemaining * 1000;
+    restTimer.remaining = restTimer.pausedRemaining;
     restTimer.paused = false;
   } else {
-    // Pause
-    restTimer.pausedRemaining = Math.max(Math.round((restTimer.endTime - Date.now()) / 1000), 0);
-    restTimer.remaining = restTimer.pausedRemaining;
+    // Pause — snapshot remaining right now
+    const snap = Math.max(Math.round((restTimer.endTime - Date.now()) / 1000), 1);
+    restTimer.pausedRemaining = snap;
+    restTimer.remaining = snap;
     restTimer.paused = true;
   }
   updateRestTimerUI();
