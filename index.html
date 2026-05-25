@@ -654,7 +654,7 @@ let state = {
 };
 
 // ── Rest Timer ────────────────────────────────────────────
-let restTimer = { active: false, total: 0, remaining: 0, color: '#fff', interval: null, endTime: null };
+let restTimer = { active: false, total: 0, remaining: 0, color: '#fff', interval: null, endTime: null, paused: false, pausedRemaining: 0 };
 
 function requestNotificationPermission() {
   if ('Notification' in window && Notification.permission === 'default') {
@@ -718,7 +718,7 @@ function showTimerDoneBanner() {
 
 // When user returns to the app, check if timer finished while away
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible' && restTimer.active) {
+  if (document.visibilityState === 'visible' && restTimer.active && !restTimer.paused) {
     const remaining = Math.round((restTimer.endTime - Date.now()) / 1000);
     if (remaining <= 0) {
       clearInterval(restTimer.interval);
@@ -734,10 +734,10 @@ document.addEventListener('visibilitychange', () => {
 function startRestTimer(seconds, color) {
   if (restTimer.interval) clearInterval(restTimer.interval);
   const endTime = Date.now() + seconds * 1000;
-  restTimer = { active: true, total: seconds, remaining: seconds, color: color || '#fff', interval: null, endTime };
+  restTimer = { active: true, total: seconds, remaining: seconds, color: color || '#fff', interval: null, endTime, paused: false, pausedRemaining: 0 };
   showRestTimer();
   restTimer.interval = setInterval(() => {
-    // Use real clock so timer stays accurate when app is backgrounded
+    if (restTimer.paused) return;
     const remaining = Math.round((restTimer.endTime - Date.now()) / 1000);
     restTimer.remaining = Math.max(remaining, 0);
     updateRestTimerUI();
@@ -751,6 +751,29 @@ function startRestTimer(seconds, color) {
       }, 800);
     }
   }, 500);
+}
+
+function pauseRestTimer() {
+  if (!restTimer.active) return;
+  if (restTimer.paused) {
+    // Resume
+    restTimer.endTime = Date.now() + restTimer.pausedRemaining * 1000;
+    restTimer.paused = false;
+  } else {
+    // Pause
+    restTimer.pausedRemaining = Math.max(Math.round((restTimer.endTime - Date.now()) / 1000), 0);
+    restTimer.remaining = restTimer.pausedRemaining;
+    restTimer.paused = true;
+  }
+  updateRestTimerUI();
+}
+
+function restartRestTimer() {
+  if (!restTimer.active && !restTimer.paused) return;
+  restTimer.paused = false;
+  restTimer.endTime = Date.now() + restTimer.total * 1000;
+  restTimer.remaining = restTimer.total;
+  updateRestTimerUI();
 }
 
 function showRestTimer() {
@@ -769,6 +792,8 @@ function showRestTimer() {
     <div style="display:flex;gap:6px;flex-shrink:0">
       <button onclick="addRestTime(-30)" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:8px;color:rgba(255,255,255,0.6);font-size:11px;font-weight:700;padding:5px 10px;cursor:pointer;font-family:'DM Sans',sans-serif">-30s</button>
       <button onclick="addRestTime(30)" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:8px;color:rgba(255,255,255,0.6);font-size:11px;font-weight:700;padding:5px 10px;cursor:pointer;font-family:'DM Sans',sans-serif">+30s</button>
+      <button id="rest-timer-pause" onclick="pauseRestTimer()" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:8px;color:rgba(255,255,255,0.6);font-size:13px;font-weight:700;padding:5px 10px;cursor:pointer;font-family:'DM Sans',sans-serif">⏸</button>
+      <button onclick="restartRestTimer()" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:8px;color:rgba(255,255,255,0.6);font-size:13px;font-weight:700;padding:5px 10px;cursor:pointer;font-family:'DM Sans',sans-serif">↺</button>
     </div>
     <button id="rest-timer-skip" onclick="skipRestTimer()">Skip ✕</button>`;
 }
@@ -776,9 +801,14 @@ function showRestTimer() {
 function updateRestTimerUI() {
   const count = document.getElementById('rest-timer-count');
   const fill = document.getElementById('rest-timer-bar-fill');
-  if (count) count.textContent = restTimer.remaining + 's';
-  if (fill) fill.style.width = (restTimer.remaining / restTimer.total * 100) + '%';
-  if (count && restTimer.remaining <= 5) count.style.color = '#ef4444';
+  const pauseBtn = document.getElementById('rest-timer-pause');
+  const remaining = restTimer.paused ? restTimer.pausedRemaining : restTimer.remaining;
+  if (count) {
+    count.textContent = remaining + 's';
+    count.style.color = restTimer.paused ? 'rgba(255,255,255,0.4)' : (remaining <= 5 ? '#ef4444' : restTimer.color);
+  }
+  if (fill) fill.style.width = (remaining / restTimer.total * 100) + '%';
+  if (pauseBtn) pauseBtn.textContent = restTimer.paused ? '▶' : '⏸';
 }
 
 function skipRestTimer() {
@@ -898,31 +928,31 @@ function computeSessionVolume(dayName) {
 }
 
 // ── Stretch Timers ────────────────────────────────────────
-let stretchTimers = {}; // { id: { remaining, total, interval, done } }
+let stretchTimers = {}; // { id: { total, endTime, interval, done } }
 
 function startStretchTimer(id, seconds) {
   if (stretchTimers[id] && stretchTimers[id].interval) {
     clearInterval(stretchTimers[id].interval);
   }
   if (stretchTimers[id] && stretchTimers[id].done) {
-    // Reset
     stretchTimers[id] = null;
     updateStretchTimerBtn(id, seconds, false, false);
     return;
   }
-  stretchTimers[id] = { remaining: seconds, total: seconds, interval: null, done: false };
+  const endTime = Date.now() + seconds * 1000;
+  stretchTimers[id] = { total: seconds, endTime, interval: null, done: false };
   updateStretchTimerBtn(id, seconds, true, false);
   stretchTimers[id].interval = setInterval(() => {
-    stretchTimers[id].remaining--;
-    if (stretchTimers[id].remaining <= 0) {
+    const remaining = Math.max(Math.round((stretchTimers[id].endTime - Date.now()) / 1000), 0);
+    if (remaining <= 0) {
       clearInterval(stretchTimers[id].interval);
       stretchTimers[id].done = true;
       if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
       updateStretchTimerBtn(id, 0, false, true);
     } else {
-      updateStretchTimerBtn(id, stretchTimers[id].remaining, true, false);
+      updateStretchTimerBtn(id, remaining, true, false);
     }
-  }, 1000);
+  }, 500);
 }
 
 function updateStretchTimerBtn(id, val, running, done) {
