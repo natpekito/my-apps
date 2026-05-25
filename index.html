@@ -654,7 +654,7 @@ let state = {
 };
 
 // ── Rest Timer ────────────────────────────────────────────
-let restTimer = { active: false, total: 0, remaining: 0, color: '#fff', interval: null, endTime: null, paused: false, pausedRemaining: 0 };
+let restTimer = { active: false, total: 0, remaining: 0, color: '#fff', interval: null, endTime: null, paused: false, pausedAt: null };
 
 function requestNotificationPermission() {
   if ('Notification' in window && Notification.permission === 'default') {
@@ -734,7 +734,7 @@ document.addEventListener('visibilitychange', () => {
 function startRestTimer(seconds, color) {
   if (restTimer.interval) clearInterval(restTimer.interval);
   const endTime = Date.now() + seconds * 1000;
-  restTimer = { active: true, total: seconds, remaining: seconds, color: color || '#fff', interval: null, endTime, paused: false, pausedRemaining: 0 };
+  restTimer = { active: true, total: seconds, remaining: seconds, color: color || '#fff', interval: null, endTime, paused: false, pausedAt: null };
   showRestTimer();
   restTimer.interval = setInterval(() => {
     if (restTimer.paused) return;
@@ -754,17 +754,16 @@ function startRestTimer(seconds, color) {
 }
 
 function pauseRestTimer() {
-  if (!restTimer.active && !restTimer.paused) return;
+  if (!restTimer.active) return;
   if (restTimer.paused) {
-    // Resume — push endTime forward from now
-    restTimer.endTime = Date.now() + restTimer.pausedRemaining * 1000;
-    restTimer.remaining = restTimer.pausedRemaining;
+    // Resume: shift endTime forward by however long we were paused
+    restTimer.endTime += Date.now() - restTimer.pausedAt;
     restTimer.paused = false;
+    restTimer.pausedAt = null;
   } else {
-    // Pause — snapshot remaining right now
-    const snap = Math.max(Math.round((restTimer.endTime - Date.now()) / 1000), 1);
-    restTimer.pausedRemaining = snap;
-    restTimer.remaining = snap;
+    // Pause: freeze remaining and record when we paused
+    restTimer.remaining = Math.max(Math.round((restTimer.endTime - Date.now()) / 1000), 0);
+    restTimer.pausedAt = Date.now();
     restTimer.paused = true;
   }
   updateRestTimerUI();
@@ -804,7 +803,7 @@ function updateRestTimerUI() {
   const count = document.getElementById('rest-timer-count');
   const fill = document.getElementById('rest-timer-bar-fill');
   const pauseBtn = document.getElementById('rest-timer-pause');
-  const remaining = restTimer.paused ? restTimer.pausedRemaining : restTimer.remaining;
+  const remaining = restTimer.remaining;
   if (count) {
     count.textContent = remaining + 's';
     count.style.color = restTimer.paused ? 'rgba(255,255,255,0.4)' : (remaining <= 5 ? '#ef4444' : restTimer.color);
