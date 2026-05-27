@@ -875,6 +875,8 @@ function pauseSessionTimer() {
     dot.style.background = state.sessionPaused ? '#F59E0B' : '#22c55e';
     dot.style.animation = state.sessionPaused ? 'none' : 'pulse 1.5s infinite';
   }
+  const label = document.getElementById('session-timer-label');
+  if (label) label.textContent = state.sessionPaused ? 'Paused' : 'Session';
 }
 
 function updateSessionTimerUI() {
@@ -1217,7 +1219,7 @@ function buildWorkoutDay(dayName) {
 
     <div id="session-timer" style="margin-top:10px">
       <div id="session-timer-dot" style="${state.sessionPaused ? 'background:#F59E0B;animation:none' : ''}"></div>
-      <span style="font-size:10px;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:1px">${state.sessionPaused ? 'Paused' : 'Session'}</span>
+      <span id="session-timer-label" style="font-size:10px;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:1px">${state.sessionPaused ? 'Paused' : 'Session'}</span>
       <span id="session-timer-val" style="font-size:13px;font-weight:700;color:rgba(255,255,255,0.7)">${getSessionTimerDisplay() || '00:00'}</span>
       <button id="session-pause-btn" onclick="pauseSessionTimer()" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:6px;color:rgba(255,255,255,0.5);font-size:11px;cursor:pointer;padding:2px 8px;font-family:'DM Sans',sans-serif;margin-left:4px">${state.sessionPaused ? '▶' : '⏸'}</button>
       <button onclick="resetSessionTimer()" style="background:none;border:none;color:rgba(255,255,255,0.2);font-size:10px;cursor:pointer;padding:0 0 0 4px;font-family:'DM Sans',sans-serif">↺</button>
