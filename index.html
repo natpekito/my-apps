@@ -870,6 +870,11 @@ function pauseSessionTimer() {
   updateSessionTimerUI();
   const btn = document.getElementById('session-pause-btn');
   if (btn) btn.textContent = state.sessionPaused ? '▶' : '⏸';
+  const dot = document.getElementById('session-timer-dot');
+  if (dot) {
+    dot.style.background = state.sessionPaused ? '#F59E0B' : '#22c55e';
+    dot.style.animation = state.sessionPaused ? 'none' : 'pulse 1.5s infinite';
+  }
 }
 
 function updateSessionTimerUI() {
