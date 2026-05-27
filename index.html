@@ -155,7 +155,7 @@
 
   /* Session timer */
   #session-timer { display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 4px 12px; margin-top: 8px; }
-  #session-timer-dot { width: 6px; height: 6px; border-radius: 50%; background: #22c55e; animation: pulse 1.5s infinite; }
+  #session-timer-dot { width: 6px; height: 6px; border-radius: 50%; }
   #session-timer-val { font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.6); }
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
 
@@ -1218,7 +1218,7 @@ function buildWorkoutDay(dayName) {
     </div>
 
     <div id="session-timer" style="margin-top:10px">
-      <div id="session-timer-dot" style="${state.sessionPaused ? 'background:#F59E0B;animation:none' : ''}"></div>
+      <div id="session-timer-dot" style="background:${state.sessionPaused ? '#F59E0B' : '#22c55e'};animation:${state.sessionPaused ? 'none' : 'pulse 1.5s infinite'}"></div>
       <span id="session-timer-label" style="font-size:10px;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:1px">${state.sessionPaused ? 'Paused' : 'Session'}</span>
       <span id="session-timer-val" style="font-size:13px;font-weight:700;color:rgba(255,255,255,0.7)">${getSessionTimerDisplay() || '00:00'}</span>
       <button id="session-pause-btn" onclick="pauseSessionTimer()" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:6px;color:rgba(255,255,255,0.5);font-size:11px;cursor:pointer;padding:2px 8px;font-family:'DM Sans',sans-serif;margin-left:4px">${state.sessionPaused ? '▶' : '⏸'}</button>
