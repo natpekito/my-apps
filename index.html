@@ -2515,7 +2515,20 @@ function updateExerciseBadge(k) {
   if (!ex) return;
   const totalSets = getExSetsCount(dayName, exName);
   const doneSets = log.checked.filter(Boolean).length;
-  const allDone = doneSets === totalSets;
+  let allDone;
+  if (ex.progression) {
+    // Green when ANY single phase exercise has all its sets checked
+    const phases = ex.progression === 'pullup' ? PULLUP_PHASES : PUSHUP_PHASES;
+    const phase = phases[getProgressionPhase(ex.progression).phaseIndex];
+    const psc = phase.exercises.map(pe => parseInt(pe.sets) || 3);
+    allDone = phase.exercises.some((pe, exIdx) => {
+      const offset = psc.slice(0, exIdx).reduce((a, b) => a + b, 0);
+      const numSets = psc[exIdx];
+      return Array.from({length: numSets}, (_, s) => log.checked[offset + s]).every(Boolean);
+    });
+  } else {
+    allDone = doneSets === totalSets;
+  }
   const c = ex.progression ? (ex.progression === 'pullup' ? PULLUP_PHASES[getProgressionPhase('pullup').phaseIndex].color : PUSHUP_PHASES[getProgressionPhase('pushup').phaseIndex].color) : day.color;
 
   const container = document.getElementById('sets-' + k);
