@@ -264,7 +264,10 @@
 <div id="day-detail-overlay" onclick="closeDayDetail(event)" style="position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.3s">
   <div id="day-detail-modal" style="width:90%;max-width:380px;max-height:80vh;overflow-y:auto;background:#14141e;border:1px solid rgba(255,255,255,0.15);border-radius:20px;padding:24px;transform:scale(0.9);transition:transform 0.3s cubic-bezier(.22,1,.36,1)">
     <div id="day-detail-content"></div>
-    <button onclick="closeDayDetail()" style="margin-top:16px;width:100%;padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.7);font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif">Close</button>
+    <div style="display:flex;gap:8px;margin-top:16px">
+      <button id="day-detail-unmark" style="flex:1;padding:12px;border-radius:12px;border:1px solid rgba(239,68,68,0.3);background:rgba(239,68,68,0.08);color:#ef4444;font-size:13px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif">Unmark</button>
+      <button onclick="closeDayDetail()" style="flex:2;padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.7);font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif">Close</button>
+    </div>
   </div>
 </div>
 
@@ -2350,6 +2353,12 @@ function showDayDetail(key, planDay) {
   `;
 
   document.getElementById('day-detail-content').innerHTML = content;
+  document.getElementById('day-detail-unmark').onclick = () => {
+    delete state.completed[key];
+    saveCompleted();
+    closeDayDetail();
+    render();
+  };
   const overlay = document.getElementById('day-detail-overlay');
   const modal = document.getElementById('day-detail-modal');
   overlay.style.opacity = '1';
