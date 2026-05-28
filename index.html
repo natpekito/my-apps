@@ -1009,24 +1009,22 @@ function loadState() {
     const notes = localStorage.getItem(SESSION_NOTES_KEY);
     if (notes) {
       const parsed = JSON.parse(notes);
-      // Migrate any old day-name keys to their most recent date
+      // Migrate any old day-name keys to their most recent completed date
       const dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
       for (const dayName of dayNames) {
         if (parsed[dayName]) {
-          // Find the most recent completed date for this day name
           const matchingDates = Object.keys(state.completed).filter(k => {
             const parts = k.split('-');
             const d = new Date(parseInt(parts[0]), parseInt(parts[1])-1, parseInt(parts[2]));
             return ALL_DAYS[d.getDay()] === dayName;
           }).sort().reverse();
-          if (matchingDates.length > 0 && !parsed[matchingDates[0]]) {
-            parsed[matchingDates[0]] = parsed[dayName];
+          if (matchingDates.length > 0) {
+            // Save under date key only if not already there
+            if (!parsed[matchingDates[0]]) parsed[matchingDates[0]] = parsed[dayName];
           }
-          delete parsed[dayName]; // always remove old day-name key
+          delete parsed[dayName]; // remove old day-name key after migrating
         }
       }
-      // Also explicitly delete any remaining day-name keys
-      for (const dayName of dayNames) delete parsed[dayName];
       state.sessionNotes = parsed;
       localStorage.setItem(SESSION_NOTES_KEY, JSON.stringify(parsed));
     }
