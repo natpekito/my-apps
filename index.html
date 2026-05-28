@@ -1254,7 +1254,7 @@ function buildWorkoutDay(dayName) {
 
   <div class="notes-label">Session Notes</div>
   <textarea id="session-notes-area" class="notes-area" rows="3" placeholder="How did this session feel? Any PRs? Notes for next time..."
-    oninput="saveNoteForDay('${todayKey()}')">${state.sessionNotes[todayKey()] || ''}</textarea>
+    oninput="saveNoteForDay('${todayKey()}')">${state.sessionNotes[todayKey()] || state.sessionNotes[planDay] || ''}</textarea>
 
   ${day.post ? buildVideoCard(day.post, 'post') : ''}
 
@@ -2313,7 +2313,7 @@ function showDayDetail(key, planDay) {
   const label = day ? day.label : 'Active Recovery';
   const dur = state.sessionDurations[key];
   const vol = state.volume[key];
-  const note = state.sessionNotes[key] || '';
+  const note = state.sessionNotes[key] || state.sessionNotes[planDay] || '';
   const dateStr = (() => {
     const parts = key.split('-');
     const d = new Date(parseInt(parts[0]), parseInt(parts[1])-1, parseInt(parts[2]));
