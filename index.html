@@ -1005,7 +1005,30 @@ function loadState() {
   try { const p = localStorage.getItem(PR_KEY); if (p) state.prs = JSON.parse(p); } catch(e) {}
   try { const pw = localStorage.getItem(PREV_WEIGHTS_KEY); if (pw) state.prevWeights = JSON.parse(pw); } catch(e) {}
   try { const dur = localStorage.getItem(SESSION_DURATIONS_KEY); if (dur) state.sessionDurations = JSON.parse(dur); } catch(e) {}
-  try { const notes = localStorage.getItem(SESSION_NOTES_KEY); if (notes) state.sessionNotes = JSON.parse(notes); } catch(e) {}
+  try {
+    const notes = localStorage.getItem(SESSION_NOTES_KEY);
+    if (notes) {
+      const parsed = JSON.parse(notes);
+      // Migrate any old day-name keys to their most recent date
+      const dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+      for (const dayName of dayNames) {
+        if (parsed[dayName]) {
+          // Find the most recent completed date for this day name
+          const matchingDates = Object.keys(state.completed).filter(k => {
+            const parts = k.split('-');
+            const d = new Date(parseInt(parts[0]), parseInt(parts[1])-1, parseInt(parts[2]));
+            return ALL_DAYS[d.getDay()] === dayName;
+          }).sort().reverse();
+          if (matchingDates.length > 0 && !parsed[matchingDates[0]]) {
+            parsed[matchingDates[0]] = parsed[dayName];
+          }
+          delete parsed[dayName];
+        }
+      }
+      state.sessionNotes = parsed;
+      localStorage.setItem(SESSION_NOTES_KEY, JSON.stringify(parsed));
+    }
+  } catch(e) {}
   try { const vol = localStorage.getItem(VOLUME_KEY); if (vol) state.volume = JSON.parse(vol); } catch(e) {}
   try { const pb = localStorage.getItem(PROG_PB_KEY); if (pb) state.progPBs = JSON.parse(pb); } catch(e) {}
   try {
@@ -1254,7 +1277,7 @@ function buildWorkoutDay(dayName) {
 
   <div class="notes-label">Session Notes</div>
   <textarea id="session-notes-area" class="notes-area" rows="3" placeholder="How did this session feel? Any PRs? Notes for next time..."
-    oninput="saveNoteForDay('${todayKey()}')">${state.sessionNotes[todayKey()] || state.sessionNotes[planDay] || ''}</textarea>
+    oninput="saveNoteForDay('${todayKey()}')">${state.sessionNotes[todayKey()] || ''}</textarea>
 
   ${day.post ? buildVideoCard(day.post, 'post') : ''}
 
@@ -2313,7 +2336,7 @@ function showDayDetail(key, planDay) {
   const label = day ? day.label : 'Active Recovery';
   const dur = state.sessionDurations[key];
   const vol = state.volume[key];
-  const note = state.sessionNotes[key] || state.sessionNotes[planDay] || '';
+  const note = state.sessionNotes[key] || '';
   const dateStr = (() => {
     const parts = key.split('-');
     const d = new Date(parseInt(parts[0]), parseInt(parts[1])-1, parseInt(parts[2]));
