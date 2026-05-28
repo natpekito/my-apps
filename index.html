@@ -3010,6 +3010,36 @@ function showCompletionSummary(planDay, duration, volume, prs) {
     </div>`;
   }
 
+  // Exercise summary
+  if (day && day.exercises) {
+    const exRows = day.exercises.map(ex => {
+      const k = exKey(planDay, ex.name);
+      const log = state.setLogs[k];
+      if (!log) return '';
+      const checkedSets = log.checked.filter(Boolean).length;
+      if (checkedSets === 0) return '';
+      const totalSets = ex.progression ? getExSetsCount(planDay, ex.name) : ex.sets;
+      const done = checkedSets >= totalSets;
+      const weights = log.weights.filter(w => w).join(', ');
+      return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.06)">
+        <span style="font-size:12px">${done ? '✅' : '🔄'}</span>
+        <div style="flex:1">
+          <div style="font-size:12px;font-weight:600;color:#fff">${ex.name}</div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.35)">${checkedSets}/${totalSets} sets${weights ? ' · ' + weights + ' lbs' : ''}</div>
+        </div>
+      </div>`;
+    }).join('');
+    if (exRows.trim()) {
+      stats += `<div style="margin-top:12px;width:100%">${exRows}</div>`;
+    }
+  }
+
+  // Note
+  const note = state.sessionNotes[todayKey()];
+  if (note) {
+    stats += `<div style="margin-top:12px;width:100%;background:rgba(255,255,255,0.04);border-radius:10px;padding:10px;font-size:12px;color:rgba(255,255,255,0.45);font-style:italic;text-align:left">"${note}"</div>`;
+  }
+
   document.getElementById('completion-stats').innerHTML = stats;
   document.getElementById('completion-modal-overlay').classList.add('open');
 }
