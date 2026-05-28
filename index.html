@@ -1022,9 +1022,11 @@ function loadState() {
           if (matchingDates.length > 0 && !parsed[matchingDates[0]]) {
             parsed[matchingDates[0]] = parsed[dayName];
           }
-          delete parsed[dayName];
+          delete parsed[dayName]; // always remove old day-name key
         }
       }
+      // Also explicitly delete any remaining day-name keys
+      for (const dayName of dayNames) delete parsed[dayName];
       state.sessionNotes = parsed;
       localStorage.setItem(SESSION_NOTES_KEY, JSON.stringify(parsed));
     }
