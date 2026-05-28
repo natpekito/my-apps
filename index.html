@@ -2372,7 +2372,12 @@ function showDayDetail(key, planDay) {
       ${vol ? `<div style="flex:1;background:rgba(255,255,255,0.05);border-radius:10px;padding:10px;text-align:center"><div style="font-size:20px;font-weight:800;color:${color}">${Math.round(vol)}</div><div style="font-size:10px;color:rgba(255,255,255,0.35);text-transform:uppercase">lbs lifted</div></div>` : ''}
     </div>
     ${exerciseRows ? `<div style="margin-bottom:12px">${exerciseRows}</div>` : ''}
-    ${note ? `<div style="background:rgba(255,255,255,0.04);border-radius:10px;padding:10px;font-size:12px;color:rgba(255,255,255,0.5);font-style:italic">"${note}"</div>` : ''}
+    <div style="margin-top:8px">
+      <div style="font-size:10px;letter-spacing:1px;color:rgba(255,255,255,0.3);text-transform:uppercase;margin-bottom:6px">Session Note</div>
+      <textarea id="day-detail-note" rows="3" placeholder="Add a note for this day..."
+        style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#fff;font-size:12px;padding:10px;outline:none;font-family:'DM Sans',sans-serif;resize:none;box-sizing:border-box">${note}</textarea>
+      <button onclick="saveDayDetailNote('${key}')" style="margin-top:6px;width:100%;padding:9px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.7);font-size:13px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif">Save Note</button>
+    </div>
   `;
 
   document.getElementById('day-detail-content').innerHTML = content;
@@ -2387,6 +2392,15 @@ function showDayDetail(key, planDay) {
   overlay.style.opacity = '1';
   overlay.style.pointerEvents = 'all';
   modal.style.transform = 'scale(1)';
+}
+
+function saveDayDetailNote(key) {
+  const el = document.getElementById('day-detail-note');
+  if (!el) return;
+  state.sessionNotes[key] = el.value;
+  saveNotes();
+  const btn = el.nextElementSibling;
+  if (btn) { btn.textContent = '✓ Saved'; setTimeout(() => { btn.textContent = 'Save Note'; }, 1500); }
 }
 
 function closeDayDetail(e) {
