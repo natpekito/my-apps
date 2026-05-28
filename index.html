@@ -1268,6 +1268,8 @@ function buildWorkoutDay(dayName) {
 
   ${buildTodayStats(planDay)}
 
+  ${buildSkippedExercisesBanner(planDay)}
+
   ${day.pre ? buildVideoCard(day.pre, 'pre') : ''}
   ${day.exercises.map(ex => buildExercise(ex, planDay, c)).join('')}
 
@@ -2012,6 +2014,37 @@ function getLastSessionData(dayName, exName, currentSets) {
     volume,
     suggestion
   };
+}
+
+function getLastCompletedDateForDay(planDay) {
+  // Find the most recent completed date for this plan day (excluding today)
+  const tKey = todayKey();
+  return Object.keys(state.completed)
+    .filter(k => k !== tKey && state.completed[k] === planDay)
+    .sort().reverse()[0] || null;
+}
+
+function buildSkippedExercisesBanner(planDay) {
+  const lastDateKey = getLastCompletedDateForDay(planDay);
+  if (!lastDateKey) return '';
+  const day = PLAN[planDay];
+  if (!day || !day.exercises) return '';
+
+  const skipped = day.exercises.filter(ex => {
+    const k = exKey(planDay, ex.name);
+    const log = state.setLogs[k];
+    // Check if log exists but all sets are unchecked (skipped), or no log at all
+    if (!log) return false;
+    return log.checked.every(c => !c);
+  }).map(ex => ex.name);
+
+  if (!skipped.length) return '';
+
+  const color = day.color;
+  return `<div style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.3);border-radius:12px;padding:10px 14px;margin-bottom:12px">
+    <div style="font-size:11px;font-weight:700;color:#F59E0B;margin-bottom:4px">⚠️ Skipped last session:</div>
+    <div style="font-size:12px;color:rgba(255,255,255,0.5)">${skipped.join(' · ')}</div>
+  </div>`;
 }
 
 function buildLastSessionPreview(dayName, exName, numSets, color) {
