@@ -261,6 +261,13 @@
   </div>
 </div>
 
+<div id="day-detail-overlay" onclick="closeDayDetail(event)" style="position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.3s">
+  <div id="day-detail-modal" style="width:90%;max-width:380px;max-height:80vh;overflow-y:auto;background:#14141e;border:1px solid rgba(255,255,255,0.15);border-radius:20px;padding:24px;transform:scale(0.9);transition:transform 0.3s cubic-bezier(.22,1,.36,1)">
+    <div id="day-detail-content"></div>
+    <button onclick="closeDayDetail()" style="margin-top:16px;width:100%;padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.7);font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif">Close</button>
+  </div>
+</div>
+
 <script>
 const STORAGE_KEY = 'natalia-workout-completed-dates';
 const SET_LOGS_KEY = 'natalia-set-logs';
@@ -2281,7 +2288,13 @@ function toggleToday() {
 }
 
 function calToggle(key, dayName) {
+  const tKey = todayKey();
   const planDay = state.workoutOverride[key] || dayName;
+  if (key !== tKey && state.completed[key]) {
+    // Past completed day — show detail modal
+    showDayDetail(key, planDay);
+    return;
+  }
   if (state.completed[key]) {
     delete state.completed[key];
   } else {
@@ -2289,6 +2302,68 @@ function calToggle(key, dayName) {
   }
   saveCompleted();
   render();
+}
+
+function showDayDetail(key, planDay) {
+  const day = PLAN[planDay];
+  const color = day ? day.color : '#60B8FF';
+  const label = day ? day.label : 'Active Recovery';
+  const dur = state.sessionDurations[key];
+  const vol = state.volume[key];
+  const note = state.sessionNotes[planDay] || '';
+  const dateStr = (() => {
+    const parts = key.split('-');
+    const d = new Date(parseInt(parts[0]), parseInt(parts[1])-1, parseInt(parts[2]));
+    return d.toLocaleDateString('default', { weekday:'long', month:'long', day:'numeric' });
+  })();
+
+  let exerciseRows = '';
+  if (day && day.exercises) {
+    exerciseRows = day.exercises.map(ex => {
+      const k = planDay + '__' + ex.name;
+      const log = state.setLogs[k];
+      if (!log) return '';
+      const checkedSets = log.checked.filter(Boolean).length;
+      if (checkedSets === 0) return '';
+      const totalSets = ex.sets;
+      const done = checkedSets >= totalSets;
+      const weights = log.weights.filter(w => w).join(', ');
+      return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.06)">
+        <span style="font-size:14px">${done ? '✅' : '🔄'}</span>
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:600;color:#fff">${ex.name}</div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.4)">${checkedSets}/${totalSets} sets${weights ? ' · ' + weights + ' lbs' : ''}</div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  const content = `
+    <div style="font-size:11px;letter-spacing:2px;color:${color};text-transform:uppercase;font-weight:700;margin-bottom:4px">${dateStr}</div>
+    <div style="font-size:22px;font-weight:900;color:#fff;margin-bottom:16px">${label}</div>
+    <div style="display:flex;gap:10px;margin-bottom:16px">
+      ${dur ? `<div style="flex:1;background:rgba(255,255,255,0.05);border-radius:10px;padding:10px;text-align:center"><div style="font-size:20px;font-weight:800;color:${color}">${Math.floor(dur/60)}m</div><div style="font-size:10px;color:rgba(255,255,255,0.35);text-transform:uppercase">Duration</div></div>` : ''}
+      ${vol ? `<div style="flex:1;background:rgba(255,255,255,0.05);border-radius:10px;padding:10px;text-align:center"><div style="font-size:20px;font-weight:800;color:${color}">${Math.round(vol)}</div><div style="font-size:10px;color:rgba(255,255,255,0.35);text-transform:uppercase">lbs lifted</div></div>` : ''}
+    </div>
+    ${exerciseRows ? `<div style="margin-bottom:12px">${exerciseRows}</div>` : ''}
+    ${note ? `<div style="background:rgba(255,255,255,0.04);border-radius:10px;padding:10px;font-size:12px;color:rgba(255,255,255,0.5);font-style:italic">"${note}"</div>` : ''}
+  `;
+
+  document.getElementById('day-detail-content').innerHTML = content;
+  const overlay = document.getElementById('day-detail-overlay');
+  const modal = document.getElementById('day-detail-modal');
+  overlay.style.opacity = '1';
+  overlay.style.pointerEvents = 'all';
+  modal.style.transform = 'scale(1)';
+}
+
+function closeDayDetail(e) {
+  if (e && e.target !== document.getElementById('day-detail-overlay')) return;
+  const overlay = document.getElementById('day-detail-overlay');
+  const modal = document.getElementById('day-detail-modal');
+  overlay.style.opacity = '0';
+  overlay.style.pointerEvents = 'none';
+  modal.style.transform = 'scale(0.9)';
 }
 
 function toggleExercise(k) {
