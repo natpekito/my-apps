@@ -2996,9 +2996,17 @@ function showCompletionSummary(planDay, duration, volume, prs) {
     const k = exKey(planDay, ex.name);
     const log = state.setLogs[k];
     if (!log) return false;
-    const numSets = ex.progression ? getExSetsCount(planDay, ex.name) : ex.sets;
-    const doneSets = log.checked.filter(Boolean).length;
-    return doneSets === numSets;
+    if (ex.progression) {
+      const phases = ex.progression === 'pullup' ? PULLUP_PHASES : PUSHUP_PHASES;
+      const phase = phases[getProgressionPhase(ex.progression).phaseIndex];
+      const psc = phase.exercises.map(pe => parseInt(pe.sets) || 3);
+      return phase.exercises.some((pe, exIdx) => {
+        const offset = psc.slice(0, exIdx).reduce((a, b) => a + b, 0);
+        const numSets = psc[exIdx];
+        return Array.from({length: numSets}, (_, s) => log.checked[offset + s]).every(Boolean);
+      });
+    }
+    return log.checked.filter(Boolean).length === ex.sets;
   }).length : 0;
 
   const fmtDur = (sec) => {
