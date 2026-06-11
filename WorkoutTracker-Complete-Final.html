@@ -2337,7 +2337,6 @@ function toggleToday() {
     saveCompleted();
 
     // Snapshot which exercises were completed at time of marking done
-    const day = PLAN[planDay];
     if (day && day.exercises) {
       day.exercises.forEach(ex => {
         const ek = exKey(planDay, ex.name);
