@@ -314,50 +314,70 @@ const PULLUP_PHASES = [
   {
     phase: 1, weeks: '1–2', label: 'Dead Hangs & Scapular Pulls',
     color: '#60B8FF',
+    why: 'Before you can pull yourself up, your hands, wrists, and shoulder joints need to get used to supporting your full bodyweight. This phase builds grip strength and teaches your shoulder blades to move correctly — a step most beginners skip and later regret.',
     exercises: [
-      { name: 'Dead Hang', sets: '3', reps: '20–30 sec', note: 'Hang passively — shoulders relaxed, then depressed' },
-      { name: 'Scapular Pull-ups', sets: '3', reps: '5–8 reps', note: 'Depress scaps without bending elbows' },
-      { name: 'Band-Assisted Negative Pull-ups', sets: '3', reps: '3–5 slow negatives', note: 'Take 5–8 sec to lower down' },
+      { name: 'Dead Hang', sets: '3', reps: '20–30 sec',
+        note: 'Jump up and grip the bar with both hands slightly wider than shoulder-width. Let your body hang completely — arms straight, feet off the floor. First just relax your shoulders (passive hang), then try to pull your shoulder blades down and together without bending your elbows (active hang). This teaches shoulder stability.' },
+      { name: 'Scapular Pull-ups', sets: '3', reps: '5–8 reps',
+        note: 'Start from a dead hang. Without bending your elbows AT ALL, squeeze your shoulder blades down and together — your body will rise a few inches. Then slowly let them relax back up. It\'s a tiny movement but very important. Think "put your shoulder blades in your back pockets."' },
+      { name: 'Band-Assisted Negative Pull-ups', sets: '3', reps: '3–5 slow negatives',
+        note: 'Loop a resistance band over the bar and step or kneel in it for support. Use the band + a small jump to get your chin above the bar. Then remove your feet from the band and lower yourself as SLOWLY as possible — aim for 5–8 seconds down. The lowering phase builds more strength than the pulling phase.' },
     ],
     tip: 'Build grip strength and shoulder stability. Focus on scapular control — this is the foundation.'
   },
   {
     phase: 2, weeks: '3–4', label: 'Eccentric Pull-ups & Flexed Hangs',
     color: '#A78BFA',
+    why: 'Your muscles are now ready to work harder. This phase focuses on holding your bodyweight at the top and controlling the descent — both of which are actually harder than the pull itself. You\'ll build the exact strength needed for your first full rep.',
     exercises: [
-      { name: 'Flexed Arm Hang', sets: '3', reps: '10–20 sec hold', note: 'Hold chin above bar as long as possible' },
-      { name: 'Slow Negative Pull-ups', sets: '3', reps: '5 reps (8 sec down)', note: 'Use a chair/band to get up, control descent' },
-      { name: 'Band-Assisted Pull-ups', sets: '3', reps: '5–8 reps', note: 'Light band — focus on full range of motion' },
+      { name: 'Flexed Arm Hang', sets: '3', reps: '10–20 sec hold',
+        note: 'Use a box or jump to get your chin above the bar — grip overhand, elbows bent. Now just hold that position as long as you can. Your arms will shake — that\'s normal. Focus on keeping your chin over the bar and your core tight. Rest 2 minutes between sets.' },
+      { name: 'Slow Negative Pull-ups', sets: '3', reps: '5 reps (8 sec down)',
+        note: 'Use a chair or band to get to the top position (chin above bar). Remove support, then lower yourself as slowly as humanly possible — count to 8 in your head. The slower, the better. When you hit the bottom, use the chair again for the next rep. Do NOT drop fast — that\'s wasted effort.' },
+      { name: 'Band-Assisted Pull-ups', sets: '3', reps: '5–8 reps',
+        note: 'Use a lighter band than last phase. Pull from a dead hang all the way up until your chin clears the bar — full range of motion every rep. Don\'t cut the range short. Squeeze your shoulder blades together at the top. Lower slowly (3 sec down).' },
     ],
     tip: 'Eccentric strength builds fast. Your first full pull-up is very close after this phase.'
   },
   {
     phase: 3, weeks: '5–6', label: 'First Full Pull-up Attempts',
     color: '#34D399',
+    why: 'This is it — time to try the real thing. Your body has been building up to this moment. Even if you only get one or two reps, that\'s a massive win. The goal here is neural patterning: training your brain and muscles to coordinate the movement without assistance.',
     exercises: [
-      { name: 'Full Pull-up Attempts', sets: '3–5', reps: 'Max reps (even if just 1)', note: 'Rest 3 min between sets — quality over quantity' },
-      { name: 'Band-Assisted Pull-ups', sets: '2', reps: '8–10 reps', note: 'Lighter band than Phase 2' },
-      { name: 'Slow Negatives', sets: '2', reps: '5 reps', note: 'Add weight via backpack if bodyweight is easy' },
+      { name: 'Full Pull-up Attempts', sets: '3–5', reps: 'Max reps (even if just 1)',
+        note: 'Dead hang start, overhand grip. Pull your elbows down toward your hips (don\'t just think "pull up" — think "pull elbows to floor"). Drive your chest toward the bar. Get your chin over and lower slowly. Rest 3 full minutes between sets — you need full recovery for max effort. Even 1 clean rep counts as a set.' },
+      { name: 'Band-Assisted Pull-ups', sets: '2', reps: '8–10 reps',
+        note: 'Use a very light band — just enough to help on the hard part. This is your volume work after the max effort sets. Full range, controlled tempo.' },
+      { name: 'Slow Negatives', sets: '2', reps: '5 reps',
+        note: 'Same as Phase 2 but your bodyweight should feel lighter now. If it feels easy, try wearing a small backpack with a water bottle for extra resistance.' },
     ],
     tip: 'Go for your first unassisted rep! Even a partial counts. Every attempt builds neural patterning.'
   },
   {
     phase: 4, weeks: '7–8', label: 'Building Reps',
     color: '#F59E0B',
+    why: 'You can do at least one pull-up now. The goal shifts to doing more. The trick is NOT grinding to failure every set — that leads to slow progress and injury. Instead, do many sets of easy reps. Your total volume goes up, your strength builds fast.',
     exercises: [
-      { name: 'Pull-ups', sets: '4–5', reps: '2–5 reps per set', note: 'Stop 1 rep before failure each set' },
-      { name: 'Chin-ups (underhand)', sets: '3', reps: 'Max reps', note: 'Easier grip — builds bicep contribution' },
-      { name: 'L-Sit Pull-ups', sets: '2', reps: '3–5 reps', note: 'Legs straight out in front — core intense' },
+      { name: 'Pull-ups', sets: '4–5', reps: '2–5 reps per set',
+        note: 'Stop 1 rep before you think you\'ll fail. So if you can do 4, stop at 3. Rest 2 minutes between sets. The goal is to finish all sets feeling strong, not crushed. Over the weeks, those numbers will climb naturally.' },
+      { name: 'Chin-ups (underhand)', sets: '3', reps: 'Max reps',
+        note: 'Same bar, but flip your grip so palms face YOU (underhand). This is easier than overhand because your biceps help more. Use these to add extra volume and give your back muscles a slightly different stimulus. Good for building overall pulling strength.' },
+      { name: 'L-Sit Pull-ups', sets: '2', reps: '3–5 reps',
+        note: 'Hang from the bar and raise your legs straight out in front of you (parallel to floor) — hold that position and do pull-ups. This is very hard on your core and hip flexors. If you can\'t hold legs straight, bend your knees at 90° instead.' },
     ],
     tip: 'Volume is key now. Multiple sets of low reps beats grinding to failure.'
   },
   {
     phase: 5, weeks: '9+', label: 'Strength & Progression',
     color: '#FF6B35',
+    why: 'You\'ve built a real foundation. Now you train like an athlete — adding weight, varying grips, and working toward more advanced skills. This phase has no end date; you keep progressing as long as you keep showing up.',
     exercises: [
-      { name: 'Weighted Pull-ups', sets: '4', reps: '4–6 reps', note: 'Add 5–10 lbs via belt or backpack' },
-      { name: 'Wide-Grip Pull-ups', sets: '3', reps: '5–8 reps', note: 'Wider grip = more lats, less bicep' },
-      { name: 'Archer Pull-ups', sets: '3', reps: '3–5 each side', note: 'Shift weight to one arm progressively' },
+      { name: 'Weighted Pull-ups', sets: '4', reps: '4–6 reps',
+        note: 'Put a small weight in a backpack (5–10 lbs) or use a dip belt. The added resistance forces your muscles to adapt faster. Keep perfect form — no kipping or swinging. Lower slowly. As this gets easy, add more weight.' },
+      { name: 'Wide-Grip Pull-ups', sets: '3', reps: '5–8 reps',
+        note: 'Grip the bar wider than usual — about 1.5x shoulder width. This shifts more work to your lats (the big back muscles) and less to your biceps. It\'s harder but builds that wide V-shape back.' },
+      { name: 'Archer Pull-ups', sets: '3', reps: '3–5 each side',
+        note: 'Grip wide. As you pull up, shift your weight toward one arm so that arm does most of the work while the other arm stays straighter as a guide. Alternate sides each rep. This is the stepping stone to a one-arm pull-up.' },
     ],
     tip: 'Strength mode. Add weight, vary grip, and work toward one-arm assisted pull-ups.'
   }
@@ -367,50 +387,70 @@ const PUSHUP_PHASES = [
   {
     phase: 1, weeks: '1–2', label: 'Wall & Incline Push-ups',
     color: '#FF6B35',
+    why: 'A full push-up requires you to move your entire bodyweight — that\'s a lot for a beginner. These variations reduce how much weight you\'re pushing so you can learn the movement with perfect form first. Rushing to full push-ups with bad form just leads to wrist and shoulder pain.',
     exercises: [
-      { name: 'Wall Push-ups', sets: '3', reps: '15–20 reps', note: 'Stand ~arm\'s length from wall, chest to wall' },
-      { name: 'Elevated Push-ups (high)', sets: '3', reps: '10–15 reps', note: 'Hands on bench/table edge' },
-      { name: 'Knee Push-ups', sets: '3', reps: '10 reps', note: 'Knees down, straight line from knees to head' },
+      { name: 'Wall Push-ups', sets: '3', reps: '15–20 reps',
+        note: 'Stand about arm\'s length from a wall. Place both hands flat on the wall at chest height, shoulder-width apart. Lean in until your chest touches the wall, then push back. Keep your body in a straight line — don\'t let your hips sag or stick out. This teaches the basic pushing pattern with almost no weight.' },
+      { name: 'Elevated Push-ups (high)', sets: '3', reps: '10–15 reps',
+        note: 'Place hands on a sturdy bench, table edge, or countertop. Walk your feet back until your body is at an angle. Lower your chest to the surface, then push back up. The higher the surface, the easier. Focus on keeping a perfectly straight line from head to heels — core tight the whole time.' },
+      { name: 'Knee Push-ups', sets: '3', reps: '10 reps',
+        note: 'Get on all fours. Walk your hands forward and lower your knees to the floor. Hands shoulder-width, straight line from knees to head. Lower your chest all the way to the floor, then push up. Don\'t let your hips rise up — keep that straight line. This is harder than it looks when done correctly.' },
     ],
     tip: 'Build the movement pattern with zero wrist/shoulder strain. Perfect form beats reps.'
   },
   {
     phase: 2, weeks: '3–4', label: 'Incline to Knee Push-ups',
     color: '#F59E0B',
+    why: 'Now you\'re increasing the load progressively. Lower inclines mean more bodyweight. The negative (slow lowering) push-ups in this phase are the secret weapon — your muscles are actually stronger lowering than pushing, so this builds real strength fast.',
     exercises: [
-      { name: 'Lower Incline Push-ups', sets: '3', reps: '12–15 reps', note: 'Hands on a lower surface ~chair height' },
-      { name: 'Knee Push-ups', sets: '3', reps: '15 reps', note: 'Work toward full range, chest nearly touching ground' },
-      { name: 'Negative Full Push-ups', sets: '3', reps: '5 slow reps (5 sec down)', note: 'Go down slow, use knees to push back up' },
+      { name: 'Lower Incline Push-ups', sets: '3', reps: '12–15 reps',
+        note: 'Same as elevated push-ups but use a lower surface — like a chair seat instead of a table. The lower the surface, the closer you are to a full push-up. Chest must touch the surface every rep. If you can\'t touch, the surface is too low — go higher and work down over time.' },
+      { name: 'Knee Push-ups', sets: '3', reps: '15 reps',
+        note: 'You should be getting chest to floor every rep by now. If not, that\'s your focus. Slow the lowering phase to 2–3 seconds. Your elbows should point about 45° back from your body — not flared out wide, not pinned to your sides. That middle position protects your shoulders.' },
+      { name: 'Negative Full Push-ups', sets: '3', reps: '5 slow reps (5 sec down)',
+        note: 'Start in a full push-up position — toes on floor, hands shoulder-width, body straight. Take 5 full seconds to lower your chest to the floor. When you hit the bottom, drop to your knees and use your knees to push back up to the top. Then repeat. You\'re training the hardest part of the movement.' },
     ],
     tip: 'Focus on chest touching the ground on every rep. Depth is everything.'
   },
   {
     phase: 3, weeks: '5–6', label: 'First Full Push-ups',
     color: '#34D399',
+    why: 'Your body is ready. The wall, incline, and knee work has built your chest, shoulders, and triceps enough to attempt the real thing. Don\'t be discouraged if you can only do 1 or 2 — that\'s exactly where you should be, and it will multiply quickly from here.',
     exercises: [
-      { name: 'Full Push-ups', sets: '3–5', reps: 'Max reps (even 1–2)', note: 'Rest fully between sets. Quality over quantity.' },
-      { name: 'Knee Push-ups', sets: '2', reps: '15–20 reps', note: 'Finisher — pump the chest' },
-      { name: 'Diamond Push-ups (knees)', sets: '2', reps: '10 reps', note: 'Hands forming a diamond = more tricep' },
+      { name: 'Full Push-ups', sets: '3–5', reps: 'Max reps (even 1–2)',
+        note: 'Full push-up position — hands shoulder-width, toes on floor, body completely straight. Lower your chest all the way to the floor, then push all the way up to full arm extension. If you can\'t keep your body straight, stop the set — don\'t let your hips sag. Rest 2–3 full minutes between sets so each set is your best effort.' },
+      { name: 'Knee Push-ups', sets: '2', reps: '15–20 reps',
+        note: 'After your full push-up attempts, your chest and triceps are already tired. These knee push-ups are a finisher — get extra volume in without needing full strength. Focus on the squeeze at the top and a slow lowering. Feel the pump.' },
+      { name: 'Diamond Push-ups (knees)', sets: '2', reps: '10 reps',
+        note: 'Place hands close together under your chest with thumbs and index fingers touching (forming a diamond shape). Lower your chest toward your hands, keeping elbows close to your body. This variation shifts a lot of the work to your triceps and inner chest. Do these on your knees — they\'re harder than they look.' },
     ],
     tip: 'Your first full push-up is here! Even 1 real one is massive progress.'
   },
   {
     phase: 4, weeks: '7–8', label: 'Building Push-up Volume',
     color: '#A78BFA',
+    why: 'You have the movement down. Now it\'s just about doing more of it. Adding different hand positions keeps things fresh and hits the chest and triceps from different angles. The goal is to be doing sets of 10+ by the end of this phase.',
     exercises: [
-      { name: 'Full Push-ups', sets: '4–5', reps: '5–10 reps', note: 'Add a rep each session — progressive overload' },
-      { name: 'Wide-Grip Push-ups', sets: '3', reps: '10 reps', note: 'More chest activation' },
-      { name: 'Close-Grip Push-ups', sets: '3', reps: '8–10 reps', note: 'More tricep + inner chest' },
+      { name: 'Full Push-ups', sets: '4–5', reps: '5–10 reps',
+        note: 'Try to add 1 rep to your max every session — that\'s progressive overload in its simplest form. Stop each set 1–2 reps before failure. So if your max is 8, do sets of 6–7. Multiple quality sets beats one set to failure. Rest 90 seconds between sets.' },
+      { name: 'Wide-Grip Push-ups', sets: '3', reps: '10 reps',
+        note: 'Place hands wider than shoulder-width. This stretches the chest more at the bottom and puts less stress on the triceps. You\'ll feel a bigger stretch across your chest. Lower slowly to really feel it. Don\'t go so wide that your elbows flare painfully — find a comfortable wide position.' },
+      { name: 'Close-Grip Push-ups', sets: '3', reps: '8–10 reps',
+        note: 'Hands directly under your shoulders or slightly closer. Elbows stay close to your sides as you lower — this shifts work to the triceps and inner chest. Much harder than regular push-ups. If wrists hurt, try making fists on the floor instead of flat palms.' },
     ],
     tip: 'Volume now. Aim to add 1 rep to your max per session.'
   },
   {
     phase: 5, weeks: '9+', label: 'Strength Push-up Variations',
     color: '#60B8FF',
+    why: 'Regular push-ups are no longer enough of a challenge. These advanced variations add difficulty without needing equipment — shifting weight to one arm, elevating your feet, or adding external load. This is where real upper body strength is built.',
     exercises: [
-      { name: 'Archer Push-ups', sets: '3', reps: '5 each side', note: 'One arm bears most weight — toward one-arm' },
-      { name: 'Decline Push-ups', sets: '3', reps: '10–12 reps', note: 'Feet elevated = upper chest and shoulders' },
-      { name: 'Weighted Push-ups', sets: '3', reps: '8–10 reps', note: 'Plate on back or wear a backpack' },
+      { name: 'Archer Push-ups', sets: '3', reps: '5 each side',
+        note: 'Start with hands very wide. As you lower, shift your weight to one side — that arm bends fully while the other arm stays almost straight (like an archer drawing a bow). Alternate sides with each rep. This is a stepping stone to the one-arm push-up. Go slowly — control is everything here.' },
+      { name: 'Decline Push-ups', sets: '3', reps: '10–12 reps',
+        note: 'Place your feet on a chair or bench and hands on the floor. Your body will be at a downward angle. This shifts more work to the upper chest and front shoulders — the part of the chest that\'s hard to hit with flat push-ups. The steeper the angle, the harder.' },
+      { name: 'Weighted Push-ups', sets: '3', reps: '8–10 reps',
+        note: 'Have someone place a weight plate on your upper back, or wear a backpack with books in it. The extra load forces your muscles to work harder. Start light (5–10 lbs) and increase as it gets easy. Keep perfect form — no sagging.' },
     ],
     tip: 'Advanced territory. Mix variations to keep gains coming.'
   }
@@ -456,14 +496,21 @@ function buildProgressionCard(type) {
   const c = phase.color;
   const totalPhases = phases.length;
 
-  const exRows = phase.exercises.map(e => `
+  const exRows = phase.exercises.map((e, i) => {
+    const noteId = `prog-note-${type}-${phaseIndex}-${i}`;
+    return `
     <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:10px 12px;margin-bottom:7px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
         <span style="font-size:13px;font-weight:600;color:#fff">${e.name}</span>
         <span style="font-size:11px;font-weight:700;background:${c}22;color:${c};border-radius:8px;padding:2px 9px">${e.sets} × ${e.reps}</span>
       </div>
-      <div style="font-size:11px;color:rgba(255,255,255,0.4);line-height:1.5">💡 ${e.note}</div>
-    </div>`).join('');
+      <button onclick="document.getElementById('${noteId}').style.display=document.getElementById('${noteId}').style.display==='none'?'block':'none'"
+        style="background:none;border:none;padding:0;cursor:pointer;display:flex;align-items:center;gap:5px">
+        <span style="font-size:11px;color:${c};font-weight:600">How to do it ▾</span>
+      </button>
+      <div id="${noteId}" style="display:none;font-size:12px;color:rgba(255,255,255,0.5);line-height:1.7;margin-top:7px;padding-top:7px;border-top:1px solid rgba(255,255,255,0.07)">${e.note}</div>
+    </div>`;
+  }).join('');
 
   const phaseDots = phases.map((p, i) => {
     const done = i < phaseIndex;
@@ -503,9 +550,14 @@ function buildProgressionCard(type) {
       <div style="font-size:11px;color:${phaseIndex < totalPhases-1 ? 'rgba(255,255,255,0.3)' : c}">${nextMsg}</div>
     </div>
 
+    <div style="background:${c}10;border:1px solid ${c}25;border-radius:10px;padding:10px 12px;margin-bottom:12px">
+      <div style="font-size:10px;color:${c};font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Why this phase?</div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.5);line-height:1.7">${phase.why}</div>
+    </div>
+
     <div style="font-size:11px;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Today's ${typeIcon} Work</div>
     ${exRows}
-    
+
     <div style="background:${c}12;border-left:3px solid ${c};border-radius:0 8px 8px 0;padding:9px 12px;margin-top:4px">
       <div style="font-size:11px;color:${c};font-weight:700;margin-bottom:2px">Coach note</div>
       <div style="font-size:12px;color:rgba(255,255,255,0.5);line-height:1.6">${phase.tip}</div>
