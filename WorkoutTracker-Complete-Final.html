@@ -3557,6 +3557,56 @@ function loadGuidedStep() {
   gs.sides = hasSides ? 2 : 1;
   gs.sideIndex = 0;
   gs.totalSecs = stretch.secs;
+  gs.gettingReady = true;
+  gs.readySecs = 5;
+  renderGuidedReady();
+  if (gs.interval) clearInterval(gs.interval);
+  gs.interval = setInterval(() => {
+    gs.readySecs--;
+    if (gs.readySecs <= 0) {
+      clearInterval(gs.interval);
+      gs.interval = null;
+      gs.gettingReady = false;
+      startGuidedTimer();
+      renderGuidedStep();
+    } else {
+      renderGuidedReady();
+    }
+  }, 1000);
+}
+
+function renderGuidedReady() {
+  const gs = guidedStretch;
+  const overlay = document.getElementById('guided-stretch-overlay');
+  if (!overlay) return;
+  const stretch = gs.stretches[gs.index];
+  const total = gs.stretches.length;
+  const c = gs.color;
+  overlay.innerHTML = `
+    <div style="width:100%;max-width:360px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <button onclick="closeGuidedStretch()" style="background:none;border:none;color:rgba(255,255,255,0.4);font-size:22px;cursor:pointer;padding:4px">✕</button>
+        <span style="font-size:11px;color:rgba(255,255,255,0.35);letter-spacing:1px;text-transform:uppercase">${gs.index + 1} of ${total}</span>
+        <div style="width:30px"></div>
+      </div>
+      <div class="gs-progress-bar-track">
+        <div class="gs-progress-bar-fill" style="width:${(gs.index/total*100).toFixed(1)}%;background:${c}"></div>
+      </div>
+      <div style="height:32px"></div>
+      <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:2px;text-align:center;margin-bottom:12px">Get into position</div>
+      <div class="gs-name">${stretch.name}</div>
+      <div class="gs-cue">${stretch.cue}</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:96px;color:${c};text-align:center;line-height:1">${gs.readySecs}</div>
+      <div style="text-align:center;margin-top:8px">
+        <button class="gs-btn gs-btn-secondary" onclick="guidedSkipReady()">Skip countdown</button>
+      </div>
+    </div>`;
+}
+
+function guidedSkipReady() {
+  const gs = guidedStretch;
+  if (gs.interval) clearInterval(gs.interval);
+  gs.gettingReady = false;
   startGuidedTimer();
   renderGuidedStep();
 }
