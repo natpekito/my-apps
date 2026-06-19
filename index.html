@@ -3574,7 +3574,7 @@ function playBeep(type) {
   try {
     const ctx = getAudioCtx();
     const doPlay = () => {
-      const beeps = type === 'switch' ? [[880, 0, 0.15], [880, 0.22, 0.15]] : [[660, 0, 0.3]];
+      const beeps = type === 'switch' ? [[880, 0, 0.15], [880, 0.22, 0.15]] : type === 'done' ? [[523, 0, 0.15], [659, 0.2, 0.25]] : [[660, 0, 0.3]];
       beeps.forEach(([freq, start, dur]) => {
         const o = ctx.createOscillator();
         const g = ctx.createGain();
@@ -3699,6 +3699,7 @@ function tickGuidedTimer() {
       gs.interval = setInterval(tickGuidedTimer, 200);
       renderGuidedStep();
     } else {
+      playBeep('done');
       if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
       setTimeout(() => { guidedNextStep(); }, 800);
     }
