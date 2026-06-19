@@ -519,8 +519,8 @@ const WARMUP_STRETCHES = [
     cue: 'Step one foot forward into a deep lunge, back knee on the floor. Keep your front foot flat and torso upright. Feel the stretch in the front of your back hip. Beep = switch legs.' },
   { name: 'Active Hamstring Stretch', secs: 45, segments: ['Left Side', 'Right Side'],
     cue: 'From the lunge, shift hips back and straighten your front leg. Flex your front foot and hinge forward slightly. Feel the pull in the back of your thigh. Beep = switch sides.' },
-  { name: 'Quad Stretch',             secs: 40, segments: ['Left Leg', 'Right Leg'],
-    cue: 'Stand tall, pull one heel up to your glute and hold your ankle. Keep knees together. Use a wall for balance if needed. Beep = switch legs.' },
+  { name: 'Quad Stretch',             secs: 40, segments: null,
+    cue: 'Stand tall, pull one heel up to your glute and hold your ankle. Keep knees together. Use a wall for balance if needed. Hold each side for equal time.' },
   { name: 'Arm Circles',              secs: 30, segments: ['Backward', 'Forward'],
     cue: 'Extend both arms out to the side. Make big slow circles. Gradually increase the size to open up the shoulder joints. Beep = switch direction.' },
   { name: 'Arm Swings',               secs: 30, segments: null,
@@ -3551,17 +3551,24 @@ let guidedStretch = {
   readySecs: 5,
 };
 
+let _audioCtx = null;
+function getAudioCtx() {
+  if (!_audioCtx) _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (_audioCtx.state === 'suspended') _audioCtx.resume();
+  return _audioCtx;
+}
+
 function playBeep(type) {
   try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const beeps = type === 'switch' ? [[880, 0, 0.12], [880, 0.18, 0.12]] : [[660, 0, 0.25]];
+    const ctx = getAudioCtx();
+    const beeps = type === 'switch' ? [[880, 0, 0.15], [880, 0.22, 0.15]] : [[660, 0, 0.3]];
     beeps.forEach(([freq, start, dur]) => {
       const o = ctx.createOscillator();
       const g = ctx.createGain();
       o.connect(g); g.connect(ctx.destination);
       o.frequency.value = freq;
       o.type = 'sine';
-      g.gain.setValueAtTime(0.4, ctx.currentTime + start);
+      g.gain.setValueAtTime(0.6, ctx.currentTime + start);
       g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + start + dur);
       o.start(ctx.currentTime + start);
       o.stop(ctx.currentTime + start + dur + 0.05);
@@ -3570,6 +3577,8 @@ function playBeep(type) {
 }
 
 function startGuidedStretch(stretches, color) {
+  // Initialize AudioContext on user gesture so beeps work on iOS Safari
+  getAudioCtx();
   guidedStretch.stretches = stretches;
   guidedStretch.index = 0;
   guidedStretch.color = color || '#60B8FF';
@@ -3750,7 +3759,8 @@ function renderGuidedStep() {
       </div>
       <div style="height:20px"></div>
       <div class="gs-name">${stretch.name}</div>
-      ${segLabel ? `<div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:${c};text-align:center;margin-bottom:6px;letter-spacing:1px">${segLabel}</div>` : ''}
+      ${segLabel ? `<div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:${c};text-align:center;margin-bottom:4px;letter-spacing:1px">${segLabel}</div>` : ''}
+      ${nextSeg ? `<div style="font-size:11px;color:rgba(255,255,255,0.3);text-align:center;margin-bottom:8px">Next: ${nextSeg}</div>` : '<div style="height:12px"></div>'}
       <div class="gs-cue">${stretch.cue}</div>
       <div class="gs-ring" style="margin:0 auto 8px">
         <svg width="160" height="160" viewBox="0 0 160 160">
@@ -3761,7 +3771,6 @@ function renderGuidedStep() {
         </svg>
         <div id="gs-ring-num" class="gs-ring-num">${gs.totalSecs}</div>
       </div>
-      ${nextSeg ? `<div class="gs-side-label" style="color:rgba(255,255,255,0.3)">Next: ${nextSeg}</div>` : '<div style="height:12px"></div>'}
       <div class="gs-btn-row" style="justify-content:center">
         <button id="gs-pause-btn" class="gs-btn gs-btn-secondary" onclick="pauseGuidedTimer()">⏸ Pause</button>
         <button class="gs-btn gs-btn-primary" onclick="guidedNextStep()">Skip →</button>
