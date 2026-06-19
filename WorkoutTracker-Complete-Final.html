@@ -3554,31 +3554,50 @@ let guidedStretch = {
 let _audioCtx = null;
 function getAudioCtx() {
   if (!_audioCtx) _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  if (_audioCtx.state === 'suspended') _audioCtx.resume();
   return _audioCtx;
+}
+
+function unlockAudio() {
+  try {
+    const ctx = getAudioCtx();
+    // Play a silent buffer — required to unlock audio on iOS Safari
+    const buf = ctx.createBuffer(1, 1, 22050);
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    src.connect(ctx.destination);
+    src.start(0);
+    ctx.resume();
+  } catch(e) {}
 }
 
 function playBeep(type) {
   try {
     const ctx = getAudioCtx();
-    const beeps = type === 'switch' ? [[880, 0, 0.15], [880, 0.22, 0.15]] : [[660, 0, 0.3]];
-    beeps.forEach(([freq, start, dur]) => {
-      const o = ctx.createOscillator();
-      const g = ctx.createGain();
-      o.connect(g); g.connect(ctx.destination);
-      o.frequency.value = freq;
-      o.type = 'sine';
-      g.gain.setValueAtTime(0.6, ctx.currentTime + start);
-      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + start + dur);
-      o.start(ctx.currentTime + start);
-      o.stop(ctx.currentTime + start + dur + 0.05);
-    });
+    const doPlay = () => {
+      const beeps = type === 'switch' ? [[880, 0, 0.15], [880, 0.22, 0.15]] : [[660, 0, 0.3]];
+      beeps.forEach(([freq, start, dur]) => {
+        const o = ctx.createOscillator();
+        const g = ctx.createGain();
+        o.connect(g); g.connect(ctx.destination);
+        o.frequency.value = freq;
+        o.type = 'sine';
+        g.gain.setValueAtTime(0.7, ctx.currentTime + start);
+        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + start + dur);
+        o.start(ctx.currentTime + start);
+        o.stop(ctx.currentTime + start + dur + 0.05);
+      });
+    };
+    if (ctx.state === 'suspended') {
+      ctx.resume().then(doPlay);
+    } else {
+      doPlay();
+    }
   } catch(e) {}
 }
 
 function startGuidedStretch(stretches, color) {
-  // Initialize AudioContext on user gesture so beeps work on iOS Safari
-  getAudioCtx();
+  // Unlock audio on user gesture — required for iOS Safari
+  unlockAudio();
   guidedStretch.stretches = stretches;
   guidedStretch.index = 0;
   guidedStretch.color = color || '#60B8FF';
