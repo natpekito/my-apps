@@ -515,16 +515,26 @@ function buildProgressionCard(type) {
 
 // ── Guided Warm-Up Sequence (used for all workout days) ───
 const WARMUP_STRETCHES = [
-  { name: 'Runners Stretch',         secs: 45, cue: 'Step one foot forward into a deep lunge, back knee on the floor. Keep your front foot flat and your torso upright. Feel the stretch in the front of your back hip. Hold each side.' },
-  { name: 'Active Hamstring Stretch', secs: 45, cue: 'From the lunge position, shift your hips back and straighten your front leg. Flex your front foot and hinge forward slightly. You\'ll feel a pull in the back of your thigh. Switch sides.' },
-  { name: 'Quad Stretch',            secs: 40, cue: 'Stand tall, pull one heel up to your glute and hold your ankle. Keep knees together and stand straight. Use a wall for balance if needed. 20 sec each side.' },
-  { name: 'Arm Circles',             secs: 30, cue: 'Extend both arms out to the side. Make big slow circles backward for 10 reps, then forward for 10 reps. Gradually increase the size of the circles to open up the shoulder joints.' },
-  { name: 'Arm Swings',              secs: 30, cue: 'Stand with feet shoulder-width. Swing both arms across your chest and then open them wide behind you. Let the momentum do the work — don\'t force it. Loosens the chest and shoulders.' },
-  { name: 'Forearm Stretch',         secs: 30, cue: 'Extend one arm forward, palm up. Use your other hand to gently pull the fingers down toward the floor. Hold 15 sec, then flip — palm down, pull fingers up. Switch arms.' },
-  { name: 'Wrist Circles',           secs: 20, cue: 'Extend both arms forward, make loose fists. Rotate your wrists in big circles — 10x clockwise, 10x counter-clockwise. Important before any pulling or pressing work.' },
-  { name: 'T Spine Rotations',       secs: 35, cue: 'Sit back into a deep squat or kneel. Place one hand behind your head, elbow out. Rotate that elbow up toward the ceiling as far as you can, then back down. 10 reps each side. Warms up your mid-back.' },
-  { name: 'Cat / Cow Stretch',       secs: 40, cue: 'On hands and knees. Cow: inhale, drop your belly, lift your head and tailbone. Cat: exhale, round your spine to the ceiling and tuck your chin. Move slowly and breathe with each rep. 10 reps.' },
-  { name: 'Plank to Downward Dog',   secs: 45, cue: 'Start in a plank — hands under shoulders, body straight. Push your hips up and back into a triangle shape (downward dog), pressing your heels toward the floor. Hold 2 sec, return to plank. 8 reps.' },
+  { name: 'Runners Stretch',          secs: 45, segments: ['Left Leg', 'Right Leg'],
+    cue: 'Step one foot forward into a deep lunge, back knee on the floor. Keep your front foot flat and torso upright. Feel the stretch in the front of your back hip. Beep = switch legs.' },
+  { name: 'Active Hamstring Stretch', secs: 45, segments: ['Left Side', 'Right Side'],
+    cue: 'From the lunge, shift hips back and straighten your front leg. Flex your front foot and hinge forward slightly. Feel the pull in the back of your thigh. Beep = switch sides.' },
+  { name: 'Quad Stretch',             secs: 40, segments: ['Left Leg', 'Right Leg'],
+    cue: 'Stand tall, pull one heel up to your glute and hold your ankle. Keep knees together. Use a wall for balance if needed. Beep = switch legs.' },
+  { name: 'Arm Circles',              secs: 30, segments: ['Backward', 'Forward'],
+    cue: 'Extend both arms out to the side. Make big slow circles. Gradually increase the size to open up the shoulder joints. Beep = switch direction.' },
+  { name: 'Arm Swings',               secs: 30, segments: null,
+    cue: 'Stand with feet shoulder-width. Swing both arms across your chest then open them wide behind you. Let the momentum do the work — don\'t force it.' },
+  { name: 'Forearm Stretch',          secs: 30, segments: ['Left Arm', 'Right Arm'],
+    cue: 'Extend one arm forward, palm up. Use the other hand to gently pull fingers down. Then flip — palm down, pull fingers up. Beep = switch arms.' },
+  { name: 'Wrist Circles',            secs: 20, segments: ['Clockwise', 'Counter-clockwise'],
+    cue: 'Extend both arms forward, make loose fists. Rotate wrists in big circles. Important before any pulling or pressing. Beep = switch direction.' },
+  { name: 'T Spine Rotations',        secs: 35, segments: ['Left Side', 'Right Side'],
+    cue: 'Sit back into a deep squat or kneel. Place one hand behind your head, elbow out. Rotate that elbow up toward the ceiling as far as you can, then back down. 10 reps each side. Beep = switch sides.' },
+  { name: 'Cat / Cow Stretch',        secs: 40, segments: null,
+    cue: 'On hands and knees. Cow: inhale, drop your belly, lift your head and tailbone. Cat: exhale, round your spine to the ceiling and tuck your chin. Move slowly and breathe with each rep.' },
+  { name: 'Plank to Downward Dog',    secs: 45, segments: ['Plank', 'Downward Dog', 'Plank', 'Downward Dog', 'Plank', 'Downward Dog', 'Plank', 'Downward Dog'],
+    cue: 'Plank: hands under shoulders, body straight. Downward Dog: push hips up and back into a triangle, press heels toward the floor. Beep = switch position.' },
 ];
 
 // ── Sunday stretch form cues ───────────────────────────────
@@ -3523,18 +3533,41 @@ loadState();
 render();
 
 // ── Guided Stretch Session ─────────────────────────────────
+// beepType: 'sides' | 'directions' | 'alternating' | null
+// directions: array of label strings shown in sequence (for arm circles, wrist circles, plank/dog)
 let guidedStretch = {
   stretches: [],
   index: 0,
-  sideIndex: 0,
-  sides: 1,
+  segmentIndex: 0,   // which segment we're on within a stretch
+  totalSegments: 1,
   totalSecs: 0,
   endTime: null,
   interval: null,
   paused: false,
   pausedAt: null,
   color: '#60B8FF',
+  beepFired: false,
+  gettingReady: false,
+  readySecs: 5,
 };
+
+function playBeep(type) {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const beeps = type === 'switch' ? [[880, 0, 0.12], [880, 0.18, 0.12]] : [[660, 0, 0.25]];
+    beeps.forEach(([freq, start, dur]) => {
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.frequency.value = freq;
+      o.type = 'sine';
+      g.gain.setValueAtTime(0.4, ctx.currentTime + start);
+      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + start + dur);
+      o.start(ctx.currentTime + start);
+      o.stop(ctx.currentTime + start + dur + 0.05);
+    });
+  } catch(e) {}
+}
 
 function startGuidedStretch(stretches, color) {
   guidedStretch.stretches = stretches;
@@ -3553,10 +3586,11 @@ function loadGuidedStep() {
     return;
   }
   const stretch = gs.stretches[gs.index];
-  const hasSides = /each side/i.test(stretch.hold || '');
-  gs.sides = hasSides ? 2 : 1;
-  gs.sideIndex = 0;
-  gs.totalSecs = stretch.secs;
+  gs.segmentIndex = 0;
+  gs.totalSegments = stretch.segments ? stretch.segments.length : 1;
+  // For multi-segment stretches, divide total time evenly
+  gs.totalSecs = stretch.segments ? Math.floor(stretch.secs / gs.totalSegments) : stretch.secs;
+  gs.beepFired = false;
   gs.gettingReady = true;
   gs.readySecs = 5;
   renderGuidedReady();
@@ -3628,15 +3662,16 @@ function tickGuidedTimer() {
   if (remaining <= 0) {
     clearInterval(gs.interval);
     gs.interval = null;
-    if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
-    // If has sides and on first side, start second side
-    if (gs.sides === 2 && gs.sideIndex === 0) {
-      gs.sideIndex = 1;
+    // Move to next segment if there are more
+    if (gs.segmentIndex < gs.totalSegments - 1) {
+      playBeep('switch');
+      if (navigator.vibrate) navigator.vibrate([80]);
+      gs.segmentIndex++;
       gs.endTime = Date.now() + gs.totalSecs * 1000;
       gs.interval = setInterval(tickGuidedTimer, 200);
       renderGuidedStep();
     } else {
-      // Auto-advance after short delay
+      if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
       setTimeout(() => { guidedNextStep(); }, 800);
     }
   }
@@ -3661,6 +3696,7 @@ function guidedNextStep() {
   const gs = guidedStretch;
   if (gs.interval) clearInterval(gs.interval);
   gs.index++;
+  gs.segmentIndex = 0;
   loadGuidedStep();
 }
 
@@ -3696,10 +3732,11 @@ function renderGuidedStep() {
   if (!overlay) return;
   const stretch = gs.stretches[gs.index];
   const total = gs.stretches.length;
-  const sideLabel = gs.sides === 2 ? (gs.sideIndex === 0 ? '— Left Side' : '— Right Side') : '';
   const r = 70;
   const circ = 2 * Math.PI * r;
   const c = gs.color;
+  const segLabel = stretch.segments ? stretch.segments[gs.segmentIndex] : null;
+  const nextSeg = stretch.segments && gs.segmentIndex < gs.totalSegments - 1 ? stretch.segments[gs.segmentIndex + 1] : null;
 
   overlay.innerHTML = `
     <div style="width:100%;max-width:360px">
@@ -3713,6 +3750,7 @@ function renderGuidedStep() {
       </div>
       <div style="height:20px"></div>
       <div class="gs-name">${stretch.name}</div>
+      ${segLabel ? `<div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:${c};text-align:center;margin-bottom:6px;letter-spacing:1px">${segLabel}</div>` : ''}
       <div class="gs-cue">${stretch.cue}</div>
       <div class="gs-ring" style="margin:0 auto 8px">
         <svg width="160" height="160" viewBox="0 0 160 160">
@@ -3723,14 +3761,13 @@ function renderGuidedStep() {
         </svg>
         <div id="gs-ring-num" class="gs-ring-num">${gs.totalSecs}</div>
       </div>
-      ${sideLabel ? `<div class="gs-side-label">${sideLabel}</div>` : '<div style="height:12px"></div>'}
+      ${nextSeg ? `<div class="gs-side-label" style="color:rgba(255,255,255,0.3)">Next: ${nextSeg}</div>` : '<div style="height:12px"></div>'}
       <div class="gs-btn-row" style="justify-content:center">
         <button id="gs-pause-btn" class="gs-btn gs-btn-secondary" onclick="pauseGuidedTimer()">⏸ Pause</button>
         <button class="gs-btn gs-btn-primary" onclick="guidedNextStep()">Skip →</button>
       </div>
       ${gs.index > 0 ? `<div style="text-align:center"><button class="gs-btn gs-btn-skip" onclick="guidedPrevStep()">← Back</button></div>` : ''}
     </div>`;
-  // restart ring animation
   const circle = document.getElementById('gs-ring-circle');
   if (circle) circle.style.strokeDashoffset = 0;
 }
