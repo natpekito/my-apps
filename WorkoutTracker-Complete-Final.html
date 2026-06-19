@@ -1538,7 +1538,11 @@ function buildExercise(ex, dayName, color) {
           </div>
           <span style="font-size:11px;font-weight:700;background:${pc}22;color:${pc};border-radius:8px;padding:2px 9px;flex-shrink:0;margin-left:8px">${pe.sets} × ${pe.reps}</span>
         </div>
-        <div style="font-size:11px;color:rgba(255,255,255,0.38);margin-bottom:4px">💡 ${pe.note}</div>
+        <button onclick="var el=document.getElementById('how-${k}-${exIdx}');el.style.display=el.style.display==='none'?'block':'none'"
+          style="background:none;border:none;padding:0;cursor:pointer;margin-bottom:6px">
+          <span style="font-size:11px;color:${pc};font-weight:600">How to do it ▾</span>
+        </button>
+        <div id="how-${k}-${exIdx}" style="display:none;font-size:12px;color:rgba(255,255,255,0.5);line-height:1.7;margin-bottom:8px;padding:8px 10px;background:rgba(255,255,255,0.04);border-radius:8px;border:1px solid rgba(255,255,255,0.07)">${pe.note}</div>
         ${peMasterWeightSelector}
         ${setRows}
       </div>`;
@@ -1592,6 +1596,13 @@ function buildExercise(ex, dayName, color) {
         </div>`;
       })()}
       ${phase.exercises.length > 1 ? `<div style="font-size:11px;color:rgba(255,255,255,0.25);margin-top:4px;margin-bottom:6px">Next up: ${phase.exercises.slice(1).map(e => e.name).join(' → ')}</div>` : ''}
+      <div style="background:${pc}10;border:1px solid ${pc}25;border-radius:10px;padding:9px 12px;margin-top:8px;margin-bottom:6px">
+        <button onclick="var el=document.getElementById('why-${k}');el.style.display=el.style.display==='none'?'block':'none'"
+          style="background:none;border:none;padding:0;cursor:pointer;width:100%;text-align:left">
+          <span style="font-size:11px;color:${pc};font-weight:700;text-transform:uppercase;letter-spacing:1px">Why this phase? ▾</span>
+        </button>
+        <div id="why-${k}" style="display:none;font-size:12px;color:rgba(255,255,255,0.5);line-height:1.7;margin-top:7px">${phase.why}</div>
+      </div>
       <div style="background:${pc}10;border-left:3px solid ${pc};border-radius:0 8px 8px 0;padding:8px 11px;margin-top:4px">
         <div style="font-size:10px;color:${pc};font-weight:700;margin-bottom:2px">Coach note</div>
         <div style="font-size:11px;color:rgba(255,255,255,0.45);line-height:1.6">${phase.tip}</div>
