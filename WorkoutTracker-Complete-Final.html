@@ -306,6 +306,7 @@ const VOLUME_KEY = 'natalia-volume';
 const REPS_KEY = 'natalia-reps';
 const PROG_PB_KEY = 'natalia-prog-pbs'; // personal bests for progression exercises
 const COMPLETED_EX_KEY = 'natalia-completed-exercises'; // { 'dateKey__planDay__exName': true/false }
+const WEIGHT_FEEL_KEY = 'natalia-weight-feel'; // { 'exKey': 'up'|'down'|null }
 
 // ── Progression System ────────────────────────────────────
 const PROGRESSION_START = new Date('2026-05-22'); // Pull-up bar install + push-up start
@@ -781,6 +782,7 @@ let state = {
   volume: {},
   progPBs: {},               // { 'exKey__peName': { value: N, unit: 'sec'|'reps', date: '...' } }
   completedExercises: {},    // { 'dateKey__planDay__exName': true/false }
+  weightFeel: {},            // { 'exKey': 'up'|'down' }
 };
 
 // ── Rest Timer ────────────────────────────────────────────
@@ -1148,6 +1150,7 @@ function loadState() {
   try { const vol = localStorage.getItem(VOLUME_KEY); if (vol) state.volume = JSON.parse(vol); } catch(e) {}
   try { const pb = localStorage.getItem(PROG_PB_KEY); if (pb) state.progPBs = JSON.parse(pb); } catch(e) {}
   try { const ce = localStorage.getItem(COMPLETED_EX_KEY); if (ce) state.completedExercises = JSON.parse(ce); } catch(e) {}
+  try { const wf = localStorage.getItem(WEIGHT_FEEL_KEY); if (wf) state.weightFeel = JSON.parse(wf); } catch(e) {}
   try {
     const ss = localStorage.getItem(SESSION_START_KEY);
     if (ss) {
@@ -1207,6 +1210,16 @@ function saveNotes() {
 
 function saveProgPBs() {
   try { localStorage.setItem(PROG_PB_KEY, JSON.stringify(state.progPBs)); } catch(e) {}
+}
+
+function setWeightFeel(k, feel) {
+  if (state.weightFeel[k] === feel) {
+    delete state.weightFeel[k]; // tap again to clear
+  } else {
+    state.weightFeel[k] = feel;
+  }
+  try { localStorage.setItem(WEIGHT_FEEL_KEY, JSON.stringify(state.weightFeel)); } catch(e) {}
+  render();
 }
 
 function checkProgPB(exKey, peName, value, unit) {
@@ -1544,7 +1557,7 @@ function buildExercise(ex, dayName, color) {
         </div>
         <button onclick="var el=document.getElementById('how-${k}-${exIdx}');el.style.display=el.style.display==='none'?'block':'none'"
           style="background:none;border:none;padding:0;cursor:pointer;margin-bottom:6px">
-          <span style="font-size:11px;color:${pc};font-weight:600">How to do it ▾</span>
+          <span style="font-size:11px;color:${pc};font-weight:600">👁️ Show setup & cues ▾</span>
         </button>
         <div id="how-${k}-${exIdx}" style="display:none;font-size:12px;color:rgba(255,255,255,0.5);line-height:1.7;margin-bottom:8px;padding:8px 10px;background:rgba(255,255,255,0.04);border-radius:8px;border:1px solid rgba(255,255,255,0.07)">${pe.note}</div>
         ${peMasterWeightSelector}
@@ -1695,6 +1708,8 @@ function buildExercise(ex, dayName, color) {
           <span class="tag tag-muted">${ex.eq}</span>
           <span class="tag tag-muted">rest ${ex.rest}</span>
           ${ex.muscles ? `<span class="tag tag-muted tag-target" style="color:rgba(255,255,255,0.55)" onclick="event.stopPropagation();openMuscleModal('${ex.name.replace(/'/g,"\\'")}','${ex.muscles}')">🎯 ${ex.muscles}</span>` : ''}
+          ${ex.eq && ex.eq.includes('DB') && state.weightFeel[k] === 'up' ? `<span class="tag" style="background:rgba(34,197,94,0.12);color:#22c55e">↑ Go heavier</span>` : ''}
+          ${ex.eq && ex.eq.includes('DB') && state.weightFeel[k] === 'down' ? `<span class="tag" style="background:rgba(245,158,11,0.12);color:#F59E0B">↓ Try lighter</span>` : ''}
         </div>
       </div>
       <div class="exercise-quick-actions">
@@ -1718,6 +1733,18 @@ function buildExercise(ex, dayName, color) {
       ${masterWeightSelector}
       ${quickCompleteBtn}
       ${sets}
+      ${ex.eq && ex.eq.includes('DB') ? (() => {
+        const feel = state.weightFeel[k];
+        const noteText = feel === 'up' ? '↑ Go heavier next session' : feel === 'down' ? '↓ Try lighter next session' : null;
+        return `<div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.07)">
+          <div style="font-size:10px;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">How did the weight feel?</div>
+          <div style="display:flex;gap:8px">
+            <button onclick="setWeightFeel('${k}','up')" style="flex:1;padding:8px;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;border:1px solid ${feel==='up'?'rgba(34,197,94,0.6)':'rgba(255,255,255,0.1)'};background:${feel==='up'?'rgba(34,197,94,0.15)':'rgba(255,255,255,0.04)'};color:${feel==='up'?'#22c55e':'rgba(255,255,255,0.5)'}">↑ Too easy</button>
+            <button onclick="setWeightFeel('${k}','down')" style="flex:1;padding:8px;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;border:1px solid ${feel==='down'?'rgba(245,158,11,0.6)':'rgba(255,255,255,0.1)'};background:${feel==='down'?'rgba(245,158,11,0.15)':'rgba(255,255,255,0.04)'};color:${feel==='down'?'#F59E0B':'rgba(255,255,255,0.5)'}">↓ Too hard</button>
+          </div>
+          ${noteText ? `<div style="margin-top:7px;font-size:11px;font-weight:700;color:${feel==='up'?'#22c55e':'#F59E0B'};text-align:center">${noteText}</div>` : ''}
+        </div>`;
+      })() : ''}
     </div>
   </div>`;
 }
