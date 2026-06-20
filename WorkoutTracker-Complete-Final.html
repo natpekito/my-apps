@@ -460,7 +460,7 @@ function getProgressionPhase(type) {
   const PULLUP_DAYS = new Set(['Wednesday', 'Friday']);
   const PUSHUP_DAYS = new Set(['Monday', 'Friday']);
   const days = type === 'pullup' ? PULLUP_DAYS : PUSHUP_DAYS;
-  const sessionsPerPhase = type === 'pullup' ? 6 : 4;
+  const sessionsPerPhase = type === 'pullup' ? 10 : 8;
 
   const start = new Date(PROGRESSION_START);
   start.setHours(0, 0, 0, 0);
@@ -721,8 +721,12 @@ const PLAN = {
         setup: '☝️ Hold one DB with both hands overhead — grip the top end like a diamond shape. Stand or sit upright. Lower the DB behind your head by bending your elbows — feel the stretch in your triceps. Elbows stay close to your head, pointing forward (not flaring out). Press back up to full extension. This is the best stretch for the long head of the tricep. Keep your core tight so you don\'t arch your lower back.' },
       { name: 'Band Bicep Curls',               sets: 3, reps: '15',     eq: 'Band',       rest: '45 sec', muscles: 'Biceps · Brachialis',
         setup: '🎗️ Stand on the center of the band with feet hip-width apart, one end in each hand. Start with palms facing forward, arms at your sides. Curl both hands up toward your shoulders — keep elbows pinned to your sides. Squeeze at the top, lower slowly. The band creates more tension at the top of the movement (opposite of DBs), so you\'ll really feel the peak contraction. Great for a finishing pump.' },
-      { name: 'Crunches + Leg Raises + Plank', sets: 3, reps: 'Circuit', eq: 'Bodyweight', rest: '45 sec', muscles: 'Upper Abs · Lower Abs · Core',
-        setup: '🔁 This is a mini circuit — do all 3 back to back, then rest. Crunches (15 reps): lie on back, knees bent, hands behind head. Curl your upper body up — focus on squeezing abs, not pulling your neck. Leg Raises (15 reps): legs straight, raise from floor to 90°, lower slowly. Plank (30 sec): forearms down, body straight as a board. Rest 45 sec after the plank, then repeat.' },
+      { name: 'Crunches', sets: 3, reps: '15', eq: 'Bodyweight', rest: '30 sec', muscles: 'Upper Abs',
+        setup: '🔁 Lie on your back, knees bent, feet flat on the floor. Place hands behind your head — don\'t pull your neck. Curl your upper body up by squeezing your abs, lifting your shoulder blades off the floor. Lower slowly. Focus on the squeeze at the top, not how high you go. Log how many reps you actually did each set.' },
+      { name: 'Leg Raises', sets: 3, reps: '15', eq: 'Bodyweight', rest: '30 sec', muscles: 'Lower Abs · Hip Flexors',
+        setup: '🦵 Lie flat on your back, legs straight, hands under your glutes for support. Keeping legs straight, raise them up to 90° then lower slowly — don\'t let your feet touch the floor between reps. The slower the lower, the harder. Log your actual reps each set.' },
+      { name: 'Plank', sets: 3, reps: '30 sec', eq: 'Bodyweight', rest: '45 sec', muscles: 'Core · Shoulders',
+        setup: '🏋️ Forearms on the floor, elbows under shoulders, body in a straight line from head to heels. Squeeze your glutes and core — don\'t let your hips sag or rise up. Breathe steadily. Log how many seconds you held each set.' },
     ]
   },
   Sunday: {
@@ -2966,7 +2970,9 @@ const EXERCISE_MUSCLES = {
   'Tricep Kickbacks':               { primary: ['Triceps'], secondary: [] },
   'Overhead Tricep Extension':      { primary: ['Triceps'], secondary: ['Core'] },
   'Band Bicep Curls':               { primary: ['Biceps', 'Brachialis'], secondary: ['Forearms'] },
-  'Crunches + Leg Raises + Plank':  { primary: ['Upper Abs', 'Lower Abs', 'Core'], secondary: ['Hip Flexors', 'Obliques'] },
+  'Crunches':   { primary: ['Upper Abs'], secondary: ['Obliques'] },
+  'Leg Raises': { primary: ['Lower Abs', 'Hip Flexors'], secondary: ['Core'] },
+  'Plank':      { primary: ['Core'], secondary: ['Shoulders', 'Glutes'] },
 };
 
 // ── Accurate Anatomical SVG Body Figures ──────────────────
