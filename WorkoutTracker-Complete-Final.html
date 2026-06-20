@@ -796,20 +796,22 @@ function requestNotificationPermission() {
 
 function playTimerBeep() {
   try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    // Three short beeps
-    [0, 0.25, 0.5].forEach(offset => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.frequency.value = 880;
-      osc.type = 'sine';
-      gain.gain.setValueAtTime(0.6, ctx.currentTime + offset);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + offset + 0.2);
-      osc.start(ctx.currentTime + offset);
-      osc.stop(ctx.currentTime + offset + 0.2);
-    });
+    const ctx = getAudioCtx();
+    const doPlay = () => {
+      [0, 0.25, 0.5].forEach(offset => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.frequency.value = 880;
+        osc.type = 'sine';
+        gain.gain.setValueAtTime(0.7, ctx.currentTime + offset);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + offset + 0.2);
+        osc.start(ctx.currentTime + offset);
+        osc.stop(ctx.currentTime + offset + 0.2);
+      });
+    };
+    if (ctx.state === 'suspended') ctx.resume().then(doPlay); else doPlay();
   } catch(e) {}
 }
 
@@ -864,6 +866,7 @@ document.addEventListener('visibilitychange', () => {
 });
 
 function startRestTimer(seconds, color) {
+  unlockAudio();
   if (restTimer.interval) clearInterval(restTimer.interval);
   const endTime = Date.now() + seconds * 1000;
   restTimer = { active: true, total: seconds, remaining: seconds, color: color || '#fff', interval: null, endTime, paused: false, pausedAt: null };
@@ -1709,6 +1712,7 @@ function buildExercise(ex, dayName, color) {
           <span class="tag tag-muted">rest ${ex.rest}</span>
           ${ex.muscles ? `<span class="tag tag-muted tag-target" style="color:rgba(255,255,255,0.55)" onclick="event.stopPropagation();openMuscleModal('${ex.name.replace(/'/g,"\\'")}','${ex.muscles}')">🎯 ${ex.muscles}</span>` : ''}
           ${ex.eq && ex.eq.includes('DB') && state.weightFeel[k] === 'up' ? `<span class="tag" style="background:rgba(34,197,94,0.12);color:#22c55e">↑ Go heavier</span>` : ''}
+          ${ex.eq && ex.eq.includes('DB') && state.weightFeel[k] === 'ok' ? `<span class="tag" style="background:rgba(96,184,255,0.12);color:#60B8FF">✓ Stay here</span>` : ''}
           ${ex.eq && ex.eq.includes('DB') && state.weightFeel[k] === 'down' ? `<span class="tag" style="background:rgba(245,158,11,0.12);color:#F59E0B">↓ Try lighter</span>` : ''}
         </div>
       </div>
@@ -1738,11 +1742,12 @@ function buildExercise(ex, dayName, color) {
         const noteText = feel === 'up' ? '↑ Go heavier next session' : feel === 'down' ? '↓ Try lighter next session' : null;
         return `<div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.07)">
           <div style="font-size:10px;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">How did the weight feel?</div>
-          <div style="display:flex;gap:8px">
-            <button onclick="setWeightFeel('${k}','up')" style="flex:1;padding:8px;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;border:1px solid ${feel==='up'?'rgba(34,197,94,0.6)':'rgba(255,255,255,0.1)'};background:${feel==='up'?'rgba(34,197,94,0.15)':'rgba(255,255,255,0.04)'};color:${feel==='up'?'#22c55e':'rgba(255,255,255,0.5)'}">↑ Too easy</button>
-            <button onclick="setWeightFeel('${k}','down')" style="flex:1;padding:8px;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;border:1px solid ${feel==='down'?'rgba(245,158,11,0.6)':'rgba(255,255,255,0.1)'};background:${feel==='down'?'rgba(245,158,11,0.15)':'rgba(255,255,255,0.04)'};color:${feel==='down'?'#F59E0B':'rgba(255,255,255,0.5)'}">↓ Too hard</button>
+          <div style="display:flex;gap:6px">
+            <button onclick="setWeightFeel('${k}','up')" style="flex:1;padding:8px;border-radius:10px;font-size:11px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;border:1px solid ${feel==='up'?'rgba(34,197,94,0.6)':'rgba(255,255,255,0.1)'};background:${feel==='up'?'rgba(34,197,94,0.15)':'rgba(255,255,255,0.04)'};color:${feel==='up'?'#22c55e':'rgba(255,255,255,0.5)'}">↑ Too easy</button>
+            <button onclick="setWeightFeel('${k}','ok')" style="flex:1;padding:8px;border-radius:10px;font-size:11px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;border:1px solid ${feel==='ok'?'rgba(96,184,255,0.6)':'rgba(255,255,255,0.1)'};background:${feel==='ok'?'rgba(96,184,255,0.15)':'rgba(255,255,255,0.04)'};color:${feel==='ok'?'#60B8FF':'rgba(255,255,255,0.5)'}">✓ Good</button>
+            <button onclick="setWeightFeel('${k}','down')" style="flex:1;padding:8px;border-radius:10px;font-size:11px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;border:1px solid ${feel==='down'?'rgba(245,158,11,0.6)':'rgba(255,255,255,0.1)'};background:${feel==='down'?'rgba(245,158,11,0.15)':'rgba(255,255,255,0.04)'};color:${feel==='down'?'#F59E0B':'rgba(255,255,255,0.5)'}">↓ Too hard</button>
           </div>
-          ${noteText ? `<div style="margin-top:7px;font-size:11px;font-weight:700;color:${feel==='up'?'#22c55e':'#F59E0B'};text-align:center">${noteText}</div>` : ''}
+          ${feel==='up' ? `<div style="margin-top:7px;font-size:11px;font-weight:700;color:#22c55e;text-align:center">↑ Go heavier next session</div>` : feel==='ok' ? `<div style="margin-top:7px;font-size:11px;font-weight:700;color:#60B8FF;text-align:center">✓ Stay at this weight</div>` : feel==='down' ? `<div style="margin-top:7px;font-size:11px;font-weight:700;color:#F59E0B;text-align:center">↓ Try lighter next session</div>` : ''}
         </div>`;
       })() : ''}
     </div>
