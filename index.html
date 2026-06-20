@@ -722,12 +722,8 @@ const PLAN = {
         setup: '☝️ Hold one DB with both hands overhead — grip the top end like a diamond shape. Stand or sit upright. Lower the DB behind your head by bending your elbows — feel the stretch in your triceps. Elbows stay close to your head, pointing forward (not flaring out). Press back up to full extension. This is the best stretch for the long head of the tricep. Keep your core tight so you don\'t arch your lower back.' },
       { name: 'Band Bicep Curls',               sets: 3, reps: '15',     eq: 'Band',       rest: '45 sec', muscles: 'Biceps · Brachialis',
         setup: '🎗️ Stand on the center of the band with feet hip-width apart, one end in each hand. Start with palms facing forward, arms at your sides. Curl both hands up toward your shoulders — keep elbows pinned to your sides. Squeeze at the top, lower slowly. The band creates more tension at the top of the movement (opposite of DBs), so you\'ll really feel the peak contraction. Great for a finishing pump.' },
-      { name: 'Crunches', sets: 3, reps: '15', eq: 'Bodyweight', rest: '30 sec', muscles: 'Upper Abs',
-        setup: '🔁 Lie on your back, knees bent, feet flat on the floor. Place hands behind your head — don\'t pull your neck. Curl your upper body up by squeezing your abs, lifting your shoulder blades off the floor. Lower slowly. Focus on the squeeze at the top, not how high you go. Log how many reps you actually did each set.' },
-      { name: 'Leg Raises', sets: 3, reps: '15', eq: 'Bodyweight', rest: '30 sec', muscles: 'Lower Abs · Hip Flexors',
-        setup: '🦵 Lie flat on your back, legs straight, hands under your glutes for support. Keeping legs straight, raise them up to 90° then lower slowly — don\'t let your feet touch the floor between reps. The slower the lower, the harder. Log your actual reps each set.' },
-      { name: 'Plank', sets: 3, reps: '30 sec', eq: 'Bodyweight', rest: '45 sec', muscles: 'Core · Shoulders',
-        setup: '🏋️ Forearms on the floor, elbows under shoulders, body in a straight line from head to heels. Squeeze your glutes and core — don\'t let your hips sag or rise up. Breathe steadily. Log how many seconds you held each set.' },
+      { name: 'Crunches + Leg Raises + Plank', sets: 3, reps: 'Circuit', eq: 'Bodyweight', rest: '45 sec', muscles: 'Upper Abs · Lower Abs · Core', circuit: true,
+        setup: '🔁 Do all 3 back to back, then rest 45 sec. Crunches: lie on back, knees bent, hands behind head — curl up squeezing abs, not pulling neck. Leg Raises: legs straight, raise to 90° then lower slowly, don\'t let feet touch the floor. Plank: forearms down, body straight, squeeze glutes and core. Log your actual reps and seconds for each.' },
     ]
   },
   Sunday: {
@@ -1267,9 +1263,10 @@ function todayKey() { return dateKey(new Date()); }
 function todayDayName() { return ALL_DAYS[new Date().getDay()]; }
 function exKey(dayName, exName) { return dayName + '__' + exName; }
 
-function getLog(dayName, exName, sets) {
+function getLog(dayName, exName, sets, circuit) {
   const k = exKey(dayName, exName);
-  return state.setLogs[k] || { checked: Array(sets).fill(false), weights: Array(sets).fill(''), reps: Array(sets).fill('') };
+  const weightSlots = circuit ? sets * 2 : sets; // circuit uses extra weight slots for plank secs
+  return state.setLogs[k] || { checked: Array(sets).fill(false), weights: Array(weightSlots).fill(''), reps: Array(sets).fill('') };
 }
 
 // ── Render ────────────────────────────────────────────────
@@ -1632,7 +1629,7 @@ function buildExercise(ex, dayName, color) {
   }
 
   // ── Standard exercise ──
-  const log = getLog(dayName, ex.name, ex.sets);
+  const log = getLog(dayName, ex.name, ex.sets, ex.circuit);
   const doneSets = log.checked.filter(Boolean).length;
   const allDone = doneSets === ex.sets;
 
@@ -1678,6 +1675,40 @@ function buildExercise(ex, dayName, color) {
     // Auto-fill with target reps if not already set
     const targetReps = parseInt((ex.reps || '').toString().split('–')[0]) || '';
     const reps = (log.reps && log.reps[s]) || targetReps;
+
+    // Circuit exercise — store crunches reps in weights[s], leg raises in reps[s], plank secs in a separate field via reps with offset
+    const circuitCrunches = ex.circuit ? (log.weights[s] || '') : '';
+    const circuitLegs = ex.circuit ? (log.reps && log.reps[s] || '') : '';
+    const circuitPlank = ex.circuit ? (log.weights[s + ex.sets] || '') : '';
+
+    if (ex.circuit) {
+      return `<div class="set-row" style="flex-direction:column;align-items:flex-start;gap:6px;padding:10px 0">
+        <div style="display:flex;align-items:center;gap:8px;width:100%">
+          <button class="set-check${checked?' checked':''}" onclick="toggleSet('${k}',${s},this)">${checked?'✓':''}</button>
+          <span class="set-label" style="font-weight:700">Set ${s+1}</span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;width:100%;padding-left:32px">
+          <div style="display:flex;flex-direction:column;gap:3px">
+            <span style="font-size:9px;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:1px">Crunches</span>
+            <input type="number" placeholder="reps" value="${circuitCrunches}"
+              style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:6px 8px;color:#fff;font-size:13px;width:100%;outline:none;font-family:'DM Sans',sans-serif;text-align:center"
+              oninput="updateWeight('${k}',${s},this.value)" />
+          </div>
+          <div style="display:flex;flex-direction:column;gap:3px">
+            <span style="font-size:9px;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:1px">Leg Raises</span>
+            <input type="number" placeholder="reps" value="${circuitLegs}"
+              style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:6px 8px;color:#fff;font-size:13px;width:100%;outline:none;font-family:'DM Sans',sans-serif;text-align:center"
+              oninput="updateReps('${k}',${s},this.value)" />
+          </div>
+          <div style="display:flex;flex-direction:column;gap:3px">
+            <span style="font-size:9px;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:1px">Plank (sec)</span>
+            <input type="number" placeholder="sec" value="${circuitPlank}"
+              style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:6px 8px;color:#fff;font-size:13px;width:100%;outline:none;font-family:'DM Sans',sans-serif;text-align:center"
+              oninput="updateWeight('${k}',${s + ex.sets},this.value)" />
+          </div>
+        </div>
+      </div>`;
+    }
 
     return `<div class="set-row">
       <button class="set-check${checked?' checked':''}" onclick="toggleSet('${k}',${s},this)">${checked?'✓':''}</button>
@@ -3002,9 +3033,7 @@ const EXERCISE_MUSCLES = {
   'Tricep Kickbacks':               { primary: ['Triceps'], secondary: [] },
   'Overhead Tricep Extension':      { primary: ['Triceps'], secondary: ['Core'] },
   'Band Bicep Curls':               { primary: ['Biceps', 'Brachialis'], secondary: ['Forearms'] },
-  'Crunches':   { primary: ['Upper Abs'], secondary: ['Obliques'] },
-  'Leg Raises': { primary: ['Lower Abs', 'Hip Flexors'], secondary: ['Core'] },
-  'Plank':      { primary: ['Core'], secondary: ['Shoulders', 'Glutes'] },
+  'Crunches + Leg Raises + Plank': { primary: ['Upper Abs', 'Lower Abs', 'Core'], secondary: ['Hip Flexors', 'Obliques'] },
 };
 
 // ── Accurate Anatomical SVG Body Figures ──────────────────
