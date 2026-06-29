@@ -310,6 +310,7 @@ const WEIGHT_FEEL_KEY = 'natalia-weight-feel'; // { 'exKey': 'up'|'down'|null }
 
 // ── Progression System ────────────────────────────────────
 const PROGRESSION_START = new Date('2026-05-22'); // Pull-up bar install + push-up start
+const PIKE_PROGRESSION_START = new Date('2026-06-29'); // Pike push-up progression added today
 
 const PULLUP_PHASES = [
   {
@@ -517,7 +518,7 @@ function getProgressionPhase(type) {
   const totalPhases = type === 'pullup' ? PULLUP_PHASES.length : type === 'pike' ? PIKE_PHASES.length : PUSHUP_PHASES.length;
   const maxPhaseIndex = totalPhases - 1;
 
-  const start = new Date(PROGRESSION_START);
+  const start = new Date(type === 'pike' ? PIKE_PROGRESSION_START : PROGRESSION_START);
   start.setHours(0, 0, 0, 0);
 
   let sessionCount = 0;
