@@ -307,6 +307,7 @@ const REPS_KEY = 'natalia-reps';
 const PROG_PB_KEY = 'natalia-prog-pbs'; // personal bests for progression exercises
 const COMPLETED_EX_KEY = 'natalia-completed-exercises'; // { 'dateKey__planDay__exName': true/false }
 const WEIGHT_FEEL_KEY = 'natalia-weight-feel'; // { 'exKey': 'up'|'down'|null }
+const WEIGHT_HISTORY_KEY = 'natalia-weight-history'; // { 'exKey': { dateKey: { weights:[], reps:[], checked:[] } } }
 
 // ── Progression System ────────────────────────────────────
 const PROGRESSION_START = new Date('2026-05-22'); // Pull-up bar install + push-up start
@@ -847,6 +848,7 @@ let state = {
   progPBs: {},               // { 'exKey__peName': { value: N, unit: 'sec'|'reps', date: '...' } }
   completedExercises: {},    // { 'dateKey__planDay__exName': true/false }
   weightFeel: {},            // { 'exKey': 'up'|'down' }
+  weightHistory: {},         // { 'exKey': { 'dateKey': { weights:[], reps:[], checked:[] } } }
 };
 
 // ── Rest Timer ────────────────────────────────────────────
@@ -1218,6 +1220,7 @@ function loadState() {
   try { const pb = localStorage.getItem(PROG_PB_KEY); if (pb) state.progPBs = JSON.parse(pb); } catch(e) {}
   try { const ce = localStorage.getItem(COMPLETED_EX_KEY); if (ce) state.completedExercises = JSON.parse(ce); } catch(e) {}
   try { const wf = localStorage.getItem(WEIGHT_FEEL_KEY); if (wf) state.weightFeel = JSON.parse(wf); } catch(e) {}
+  try { const wh = localStorage.getItem(WEIGHT_HISTORY_KEY); if (wh) state.weightHistory = JSON.parse(wh); } catch(e) {}
   try {
     const ss = localStorage.getItem(SESSION_START_KEY);
     if (ss) {
@@ -1286,6 +1289,10 @@ function setWeightFeel(k, feel) {
     state.weightFeel[k] = feel;
   }
   try { localStorage.setItem(WEIGHT_FEEL_KEY, JSON.stringify(state.weightFeel)); } catch(e) {}
+
+function saveWeightHistory() {
+  try { localStorage.setItem(WEIGHT_HISTORY_KEY, JSON.stringify(state.weightHistory)); } catch(e) {}
+}
   render();
 }
 
@@ -2277,7 +2284,11 @@ function getLastSessionData(dayName, exName, currentSets) {
 
   const lastSession = completedDates[0];
   const k = exKey(dayName, exName);
-  const log = state.setLogs[k];
+
+  // Prefer historical snapshot, fall back to current setLogs
+  const historyForEx = state.weightHistory[k];
+  const historicalLog = historyForEx && historyForEx[lastSession.key];
+  const log = historicalLog || state.setLogs[k];
 
   if (!log || !log.weights.some(w => w)) return null;
 
@@ -2674,6 +2685,17 @@ function toggleToday() {
         state.completedExercises[k + '__' + planDay + '__' + ex.name] = done;
       });
       try { localStorage.setItem(COMPLETED_EX_KEY, JSON.stringify(state.completedExercises)); } catch(e) {}
+
+      // Snapshot weights for clipboard history
+      day.exercises.forEach(ex => {
+        const ek = exKey(planDay, ex.name);
+        const log = state.setLogs[ek];
+        if (log && log.weights.some(w => w)) {
+          if (!state.weightHistory[ek]) state.weightHistory[ek] = {};
+          state.weightHistory[ek][k] = { weights: [...log.weights], reps: [...log.reps], checked: [...log.checked] };
+        }
+      });
+      saveWeightHistory();
     }
 
     // Show completion modal
@@ -2818,7 +2840,12 @@ function copyLastWeek(k, numSets) {
 
   const data = getLastSessionData(dayName, exName, numSets);
   if (!data || !data.weights.length) {
-    alert('No previous session data found');
+    // Show a toast instead of alert (alert can be blocked on iOS Safari)
+    const toast = document.createElement('div');
+    toast.textContent = 'No previous session data yet — complete a workout first';
+    toast.style.cssText = 'position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#1e1e2e;border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.8);font-size:13px;padding:10px 18px;border-radius:12px;z-index:9999;white-space:nowrap;font-family:"DM Sans",sans-serif';
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
     return;
   }
 
