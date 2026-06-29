@@ -1289,11 +1289,11 @@ function setWeightFeel(k, feel) {
     state.weightFeel[k] = feel;
   }
   try { localStorage.setItem(WEIGHT_FEEL_KEY, JSON.stringify(state.weightFeel)); } catch(e) {}
+  render();
+}
 
 function saveWeightHistory() {
   try { localStorage.setItem(WEIGHT_HISTORY_KEY, JSON.stringify(state.weightHistory)); } catch(e) {}
-}
-  render();
 }
 
 function checkProgPB(exKey, peName, value, unit) {
