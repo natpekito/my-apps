@@ -312,7 +312,6 @@ const WEIGHT_HISTORY_KEY = 'natalia-weight-history'; // { 'exKey': { dateKey: { 
 // ── Progression System ────────────────────────────────────
 const PROGRESSION_START = new Date('2026-05-22'); // Pull-up bar install + push-up start
 const PIKE_PROGRESSION_START = new Date('2026-06-29'); // Pike push-up progression added today
-const JUMPROPE_PROGRESSION_START = new Date('2026-06-29'); // Jump rope progression added today
 
 const PULLUP_PHASES = [
   {
@@ -384,45 +383,6 @@ const PULLUP_PHASES = [
         note: 'Grip wide. As you pull up, shift your weight toward one arm so that arm does most of the work while the other arm stays straighter as a guide. Alternate sides each rep. This is the stepping stone to a one-arm pull-up.' },
     ],
     tip: 'Strength mode. Add weight, vary grip, and work toward one-arm assisted pull-ups.'
-  }
-];
-
-const JUMPROPE_PHASES = [
-  {
-    phase: 1, weeks: '1–3', label: 'Basic Jumps — Building Consistency',
-    color: '#34D399',
-    why: 'Jump rope looks simple but coordination and ankle endurance take time to build. The goal here is not speed or tricks — it\'s just being able to jump continuously without stopping. 2 minutes straight with good form is harder than it sounds.',
-    exercises: [
-      { name: 'Jump Rope — Both Feet', sets: '3', reps: '1–2 min',
-        note: 'Both feet together, jump just high enough to clear the rope — no higher. Wrists rotate the rope, not your whole arms. Land softly on the balls of your feet with a slight bend in your knees. If you trip, just restart immediately. Rest 30 sec between rounds. Goal: 3 rounds of 2 min without stopping.' },
-      { name: 'Rest & Breathing', sets: '3', reps: '30 sec between rounds',
-        note: 'Keep moving during rest — march in place or walk. Don\'t sit down. Keeping your heart rate slightly elevated between rounds makes the cardio benefit much better.' },
-    ],
-    tip: 'Consistency over everything. Tripping is normal — just restart.'
-  },
-  {
-    phase: 2, weeks: '4–6', label: 'Alternating Feet',
-    color: '#60B8FF',
-    why: 'Alternating feet is closer to actual running rhythm and doubles the coordination demand. It\'s also easier to sustain for longer because each foot gets a tiny recovery between jumps. This phase builds real cardio base.',
-    exercises: [
-      { name: 'Alternating Feet Jump Rope', sets: '3', reps: '2–3 min',
-        note: 'Instead of both feet together, shift your weight from foot to foot with each jump — like jogging in place with the rope. Keep a steady rhythm. Start slow and find the pace that feels like a light jog. Your goal is 3 rounds of 3 minutes. If you need to drop back to both feet for a bit, that\'s fine.' },
-      { name: 'High Knees Jump Rope', sets: '2', reps: '30 sec',
-        note: 'Same as alternating feet but drive your knees up higher — aim for hip height. This is harder and more of a cardio burst. Do these at the end after your regular rounds. 30 sec is enough.' },
-    ],
-    tip: 'Think light jog, not big hops. Smaller jumps = better rhythm.'
-  },
-  {
-    phase: 3, weeks: '7+', label: 'Speed & Double Unders',
-    color: '#F59E0B',
-    why: 'Double unders are the jump rope equivalent of a pull-up — they look impossible at first and then suddenly click. They burn 3x the calories of regular jumps and massively improve coordination. One clean double under is a milestone.',
-    exercises: [
-      { name: 'Fast Alternating Feet', sets: '3', reps: '3 min',
-        note: 'Same as phase 2 but push the pace. You should be breathing hard by 90 seconds. This is your main cardio work. Keep your form tight even when tired — don\'t let your arms flare out.' },
-      { name: 'Double Under Attempts', sets: '3', reps: '10–15 attempts',
-        note: 'Jump slightly higher than normal and spin the rope fast enough to pass under your feet twice per jump. The timing is: jump — quick flick of the wrists — land. Most people overthink it. Just jump a bit higher and spin faster. You\'ll fail a lot — that\'s the point. Even 1 clean double under is a win.' },
-    ],
-    tip: '🏆 One clean double under is a real skill milestone. Keep attempting.'
   }
 ];
 
@@ -554,13 +514,12 @@ function getProgressionPhase(type) {
   const PULLUP_DAYS   = new Set(['Wednesday', 'Friday']);
   const PUSHUP_DAYS   = new Set(['Monday', 'Friday']);
   const PIKE_DAYS     = new Set(['Monday']);
-  const JUMPROPE_DAYS = new Set(['Monday','Tuesday','Wednesday','Thursday','Friday']);
-  const days = type === 'pullup' ? PULLUP_DAYS : type === 'pike' ? PIKE_DAYS : type === 'jumprope' ? JUMPROPE_DAYS : PUSHUP_DAYS;
-  const sessionsPerPhase = type === 'pullup' ? 10 : type === 'jumprope' ? 6 : 8;
-  const totalPhases = type === 'pullup' ? PULLUP_PHASES.length : type === 'pike' ? PIKE_PHASES.length : type === 'jumprope' ? JUMPROPE_PHASES.length : PUSHUP_PHASES.length;
+  const days = type === 'pullup' ? PULLUP_DAYS : type === 'pike' ? PIKE_DAYS : PUSHUP_DAYS;
+  const sessionsPerPhase = type === 'pullup' ? 10 : 8;
+  const totalPhases = type === 'pullup' ? PULLUP_PHASES.length : type === 'pike' ? PIKE_PHASES.length : PUSHUP_PHASES.length;
   const maxPhaseIndex = totalPhases - 1;
 
-  const start = new Date(type === 'pike' ? PIKE_PROGRESSION_START : type === 'jumprope' ? JUMPROPE_PROGRESSION_START : PROGRESSION_START);
+  const start = new Date(type === 'pike' ? PIKE_PROGRESSION_START : PROGRESSION_START);
   start.setHours(0, 0, 0, 0);
 
   let sessionCount = 0;
@@ -576,7 +535,7 @@ function getProgressionPhase(type) {
 
   // Manual phase override — allows advancing phase regardless of session count
   try {
-    const overrideKey = type === 'pullup' ? 'natalia-pullup-phase-override' : type === 'pike' ? 'natalia-pike-phase-override' : type === 'jumprope' ? 'natalia-jumprope-phase-override' : 'natalia-pushup-phase-override';
+    const overrideKey = type === 'pullup' ? 'natalia-pullup-phase-override' : type === 'pike' ? 'natalia-pike-phase-override' : 'natalia-pushup-phase-override';
     const override = localStorage.getItem(overrideKey);
     if (override !== null) phaseIndex = Math.max(phaseIndex, Math.min(parseInt(override), maxPhaseIndex));
   } catch(e) {}
@@ -589,7 +548,7 @@ function getProgressionPhase(type) {
 
 function buildProgressionCard(type) {
   const { sessionCount, phaseIndex, sessionsIntoPhase, sessionsUntilNext, sessionsPerPhase } = getProgressionPhase(type);
-  const phases = type === 'pullup' ? PULLUP_PHASES : type === 'pike' ? PIKE_PHASES : type === 'jumprope' ? JUMPROPE_PHASES : PUSHUP_PHASES;
+  const phases = type === 'pullup' ? PULLUP_PHASES : type === 'pike' ? PIKE_PHASES : PUSHUP_PHASES;
   const phase = phases[phaseIndex];
   const c = phase.color;
   const totalPhases = phases.length;
@@ -622,8 +581,8 @@ function buildProgressionCard(type) {
     return `<div style="width:10px;height:10px;border-radius:50%;background:${filled ? c : 'rgba(255,255,255,0.12)'};border:1.5px solid ${filled ? c : 'rgba(255,255,255,0.15)'}"></div>`;
   }).join('');
 
-  const typeLabel = type === 'pullup' ? '🏋️ Pull-up Bar' : type === 'pike' ? '🔺 Pike Push-up' : type === 'jumprope' ? '🪢 Jump Rope' : '💪 Push-up';
-  const typeIcon = type === 'pullup' ? '🔝' : type === 'pike' ? '🔺' : type === 'jumprope' ? '🪢' : '⬆️';
+  const typeLabel = type === 'pullup' ? '🏋️ Pull-up Bar' : type === 'pike' ? '🔺 Pike Push-up' : '💪 Push-up';
+  const typeIcon = type === 'pullup' ? '🔝' : type === 'pike' ? '🔺' : '⬆️';
   const nextMsg = phaseIndex < totalPhases - 1
     ? `${sessionsUntilNext} more session${sessionsUntilNext !== 1 ? 's' : ''} to Phase ${phase.phase + 1}`
     : '🏆 Final Phase — Elite Territory';
@@ -1362,9 +1321,9 @@ function saveProgPB(exKey, peName, value, unit) {
 
 function advanceProgPhase(type) {
   const prog = getProgressionPhase(type);
-  const phases = type === 'pullup' ? PULLUP_PHASES : type === 'pike' ? PIKE_PHASES : type === 'jumprope' ? JUMPROPE_PHASES : PUSHUP_PHASES;
+  const phases = type === 'pullup' ? PULLUP_PHASES : type === 'pike' ? PIKE_PHASES : PUSHUP_PHASES;
   if (prog.phaseIndex < phases.length - 1) {
-    const key = type === 'pullup' ? 'natalia-pullup-phase-override' : type === 'pike' ? 'natalia-pike-phase-override' : type === 'jumprope' ? 'natalia-jumprope-phase-override' : 'natalia-pushup-phase-override';
+    const key = type === 'pullup' ? 'natalia-pullup-phase-override' : type === 'pike' ? 'natalia-pike-phase-override' : 'natalia-pushup-phase-override';
     const newPhase = prog.phaseIndex + 1;
     try { localStorage.setItem(key, newPhase.toString()); } catch(e) {}
     render();
@@ -1552,7 +1511,7 @@ function buildExercise(ex, dayName, color) {
   // ── Progression exercise (pull-up or push-up phase work) ──
   if (ex.progression) {
     const prog = getProgressionPhase(ex.progression);
-    const phases = ex.progression === 'pullup' ? PULLUP_PHASES : ex.progression === 'pike' ? PIKE_PHASES : ex.progression === 'jumprope' ? JUMPROPE_PHASES : PUSHUP_PHASES;
+    const phases = ex.progression === 'pullup' ? PULLUP_PHASES : ex.progression === 'pike' ? PIKE_PHASES : PUSHUP_PHASES;
     const phase = phases[prog.phaseIndex];
     const pc = phase.color;
 
@@ -1592,7 +1551,7 @@ function buildExercise(ex, dayName, color) {
       ? `${prog.sessionsUntilNext} session${prog.sessionsUntilNext !== 1 ? 's' : ''} to Phase ${prog.phaseIndex + 2}`
       : '🏆 Final Phase';
 
-    const typeLabel = ex.progression === 'pullup' ? '🏋️ Pull-up' : ex.progression === 'pike' ? '🔺 Pike Push-up' : ex.progression === 'jumprope' ? '🪢 Jump Rope' : '💪 Push-up';
+    const typeLabel = ex.progression === 'pullup' ? '🏋️ Pull-up' : ex.progression === 'pike' ? '🔺 Pike Push-up' : '💪 Push-up';
 
     // Phase exercise rows — each with full per-set logging stored flat in one log key
     // Layout: [ex0_set0, ex0_set1, ..., ex1_set0, ex1_set1, ...]
@@ -2076,11 +2035,9 @@ function buildProgressionOverview() {
   const puProg = getProgressionPhase('pullup');
   const psProg = getProgressionPhase('pushup');
   const pkProg = getProgressionPhase('pike');
-  const jrProg = getProgressionPhase('jumprope');
   const puPhase = PULLUP_PHASES[puProg.phaseIndex];
   const psPhase = PUSHUP_PHASES[psProg.phaseIndex];
   const pkPhase = PIKE_PHASES[pkProg.phaseIndex];
-  const jrPhase = JUMPROPE_PHASES[jrProg.phaseIndex];
 
   function miniPhaseBar(phases, idx) {
     return phases.map((p, i) => {
@@ -2104,11 +2061,6 @@ function buildProgressionOverview() {
     return `<div style="width:9px;height:9px;border-radius:50%;background:${filled ? psPhase.color : 'rgba(255,255,255,0.12)'};border:1.5px solid ${filled ? psPhase.color : 'rgba(255,255,255,0.15)'}"></div>`;
   }).join('');
 
-  const jrDots = Array.from({length: jrProg.sessionsPerPhase}, (_, i) => {
-    const filled = i < jrProg.sessionsIntoPhase;
-    return `<div style="width:9px;height:9px;border-radius:50%;background:${filled ? jrPhase.color : 'rgba(255,255,255,0.12)'};border:1.5px solid ${filled ? jrPhase.color : 'rgba(255,255,255,0.15)'}"></div>`;
-  }).join('');
-
   const pkDots = Array.from({length: pkProg.sessionsPerPhase}, (_, i) => {
     const filled = i < pkProg.sessionsIntoPhase;
     return `<div style="width:9px;height:9px;border-radius:50%;background:${filled ? pkPhase.color : 'rgba(255,255,255,0.12)'};border:1.5px solid ${filled ? pkPhase.color : 'rgba(255,255,255,0.15)'}"></div>`;
@@ -2119,9 +2071,6 @@ function buildProgressionOverview() {
     : '🏆 Final Phase';
   const psNext = psProg.phaseIndex < PUSHUP_PHASES.length - 1
     ? `${psProg.sessionsUntilNext} session${psProg.sessionsUntilNext !== 1 ? 's' : ''} to Phase ${psProg.phaseIndex + 2}`
-    : '🏆 Final Phase';
-  const jrNext = jrProg.phaseIndex < JUMPROPE_PHASES.length - 1
-    ? `${jrProg.sessionsUntilNext} session${jrProg.sessionsUntilNext !== 1 ? 's' : ''} to Phase ${jrProg.phaseIndex + 2}`
     : '🏆 Final Phase';
   const pkNext = pkProg.phaseIndex < PIKE_PHASES.length - 1
     ? `${pkProg.sessionsUntilNext} session${pkProg.sessionsUntilNext !== 1 ? 's' : ''} to Phase ${pkProg.phaseIndex + 2}`
@@ -2164,24 +2113,6 @@ function buildProgressionOverview() {
       <div style="display:flex;align-items:center;justify-content:space-between">
         <div style="display:flex;gap:5px">${psDots}</div>
         <div style="font-size:10px;color:rgba(255,255,255,0.3)">${psNext}</div>
-      </div>
-    </div>
-
-    <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:14px;margin-bottom:8px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <div>
-          <div style="font-size:10px;color:rgba(255,255,255,0.3);letter-spacing:1px;text-transform:uppercase;margin-bottom:3px">🪢 Jump Rope · Mon–Fri</div>
-          <div style="font-size:13px;font-weight:700;color:${jrPhase.color}">Phase ${jrPhase.phase} — ${jrPhase.label}</div>
-        </div>
-        <div style="text-align:right">
-          <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:${jrPhase.color}">${jrProg.sessionCount}</div>
-          <div style="font-size:9px;color:rgba(255,255,255,0.3)">sessions</div>
-        </div>
-      </div>
-      <div style="display:flex;gap:4px;margin-bottom:8px">${miniPhaseBar(JUMPROPE_PHASES, jrProg.phaseIndex)}</div>
-      <div style="display:flex;align-items:center;justify-content:space-between">
-        <div style="display:flex;gap:5px">${jrDots}</div>
-        <div style="font-size:10px;color:rgba(255,255,255,0.3)">${jrNext}</div>
       </div>
     </div>
 
@@ -2526,7 +2457,7 @@ function setAllWeights(k, numSets, weight) {
 
     if (exercise?.progression) {
       const prog = getProgressionPhase(exercise.progression);
-      const phases = exercise.progression === 'pullup' ? PULLUP_PHASES : exercise.progression === 'pike' ? PIKE_PHASES : exercise.progression === 'jumprope' ? JUMPROPE_PHASES : PUSHUP_PHASES;
+      const phases = exercise.progression === 'pullup' ? PULLUP_PHASES : exercise.progression === 'pike' ? PIKE_PHASES : PUSHUP_PHASES;
       const phase = phases[prog.phaseIndex];
       const phaseSetCounts = phase.exercises.map(pe => parseInt(pe.sets) || 3);
       const offset = phaseSetCounts.slice(0, exIdx).reduce((a, b) => a + b, 0);
@@ -2747,7 +2678,7 @@ function toggleToday() {
         let done = false;
         if (log) {
           if (ex.progression) {
-            const phases = ex.progression === 'pullup' ? PULLUP_PHASES : ex.progression === 'pike' ? PIKE_PHASES : ex.progression === 'jumprope' ? JUMPROPE_PHASES : PUSHUP_PHASES;
+            const phases = ex.progression === 'pullup' ? PULLUP_PHASES : ex.progression === 'pike' ? PIKE_PHASES : PUSHUP_PHASES;
             const phase = phases[getProgressionPhase(ex.progression).phaseIndex];
             const psc = phase.exercises.map(pe => parseInt(pe.sets) || 3);
             done = phase.exercises.some((pe, exIdx) => {
@@ -3009,7 +2940,7 @@ function getExSetsCount(dayName, exName) {
   if (!ex) return 1;
   if (ex.progression) {
     const prog = getProgressionPhase(ex.progression);
-    const phases = ex.progression === 'pullup' ? PULLUP_PHASES : ex.progression === 'pike' ? PIKE_PHASES : ex.progression === 'jumprope' ? JUMPROPE_PHASES : PUSHUP_PHASES;
+    const phases = ex.progression === 'pullup' ? PULLUP_PHASES : ex.progression === 'pike' ? PIKE_PHASES : PUSHUP_PHASES;
     const phase = phases[prog.phaseIndex];
     // Total flat sets across all phase exercises
     return phase.exercises.reduce((a, pe) => a + (parseInt(pe.sets) || 3), 0);
@@ -3123,7 +3054,7 @@ function updateExerciseBadge(k) {
   let allDone;
   if (ex.progression) {
     // Green when ANY single phase exercise has all its sets checked
-    const phases = ex.progression === 'pullup' ? PULLUP_PHASES : ex.progression === 'pike' ? PIKE_PHASES : ex.progression === 'jumprope' ? JUMPROPE_PHASES : PUSHUP_PHASES;
+    const phases = ex.progression === 'pullup' ? PULLUP_PHASES : ex.progression === 'pike' ? PIKE_PHASES : PUSHUP_PHASES;
     const phase = phases[getProgressionPhase(ex.progression).phaseIndex];
     const psc = phase.exercises.map(pe => parseInt(pe.sets) || 3);
     allDone = phase.exercises.some((pe, exIdx) => {
@@ -3134,7 +3065,7 @@ function updateExerciseBadge(k) {
   } else {
     allDone = doneSets === totalSets;
   }
-  const c = ex.progression ? (ex.progression === 'pullup' ? PULLUP_PHASES[getProgressionPhase('pullup').phaseIndex].color : ex.progression === 'pike' ? PIKE_PHASES[getProgressionPhase('pike').phaseIndex].color : ex.progression === 'jumprope' ? JUMPROPE_PHASES[getProgressionPhase('jumprope').phaseIndex].color : PUSHUP_PHASES[getProgressionPhase('pushup').phaseIndex].color) : day.color;
+  const c = ex.progression ? (ex.progression === 'pullup' ? PULLUP_PHASES[getProgressionPhase('pullup').phaseIndex].color : ex.progression === 'pike' ? PIKE_PHASES[getProgressionPhase('pike').phaseIndex].color : PUSHUP_PHASES[getProgressionPhase('pushup').phaseIndex].color) : day.color;
 
   const container = document.getElementById('sets-' + k);
   if (!container) return;
@@ -3441,7 +3372,7 @@ function showCompletionSummary(planDay, duration, volume, prs) {
     const log = state.setLogs[k];
     if (!log) return false;
     if (ex.progression) {
-      const phases = ex.progression === 'pullup' ? PULLUP_PHASES : ex.progression === 'pike' ? PIKE_PHASES : ex.progression === 'jumprope' ? JUMPROPE_PHASES : PUSHUP_PHASES;
+      const phases = ex.progression === 'pullup' ? PULLUP_PHASES : ex.progression === 'pike' ? PIKE_PHASES : PUSHUP_PHASES;
       const phase = phases[getProgressionPhase(ex.progression).phaseIndex];
       const psc = phase.exercises.map(pe => parseInt(pe.sets) || 3);
       return phase.exercises.some((pe, exIdx) => {
@@ -3605,7 +3536,7 @@ function buildTodayStats(planDay) {
 
     if (ex.progression) {
       // Progression exercise: done if ANY single phase exercise has all its sets complete
-      const phases = ex.progression === 'pullup' ? PULLUP_PHASES : ex.progression === 'pike' ? PIKE_PHASES : ex.progression === 'jumprope' ? JUMPROPE_PHASES : PUSHUP_PHASES;
+      const phases = ex.progression === 'pullup' ? PULLUP_PHASES : ex.progression === 'pike' ? PIKE_PHASES : PUSHUP_PHASES;
       const prog = getProgressionPhase(ex.progression);
       const phase = phases[prog.phaseIndex];
       const psc = phase.exercises.map(pe => parseInt(pe.sets) || 3);
@@ -3732,7 +3663,6 @@ function buildStatsTab() {
   const puProg = getProgressionPhase('pullup');
   const psProg = getProgressionPhase('pushup');
   const pkProg = getProgressionPhase('pike');
-  const jrProg = getProgressionPhase('jumprope');
 
   // Build volume data for last 8 weeks
   const weeklyVolume = [];
@@ -3838,15 +3768,6 @@ function buildStatsTab() {
           </div>
           <div style="height:6px;background:rgba(255,255,255,0.08);border-radius:10px;overflow:hidden">
             <div style="height:100%;width:${Math.round(pkProg.sessionsIntoPhase/pkProg.sessionsPerPhase*100)}%;background:#F472B6;border-radius:10px"></div>
-          </div>
-        </div>
-        <div>
-          <div style="display:flex;justify-content:space-between;margin-bottom:6px">
-            <span style="font-size:13px;font-weight:600;color:#34D399">Jump Rope — Phase ${jrProg.phaseIndex + 1}</span>
-            <span style="font-size:12px;color:rgba(255,255,255,0.4)">${jrProg.sessionsIntoPhase}/${jrProg.sessionsPerPhase} sessions</span>
-          </div>
-          <div style="height:6px;background:rgba(255,255,255,0.08);border-radius:10px;overflow:hidden">
-            <div style="height:100%;width:${Math.round(jrProg.sessionsIntoPhase/jrProg.sessionsPerPhase*100)}%;background:#34D399;border-radius:10px"></div>
           </div>
         </div>
       </div>
