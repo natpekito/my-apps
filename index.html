@@ -2672,37 +2672,41 @@ function toggleToday() {
 
     // Snapshot which exercises were completed at time of marking done
     if (day && day.exercises) {
-      day.exercises.forEach(ex => {
-        const ek = exKey(planDay, ex.name);
-        const log = state.setLogs[ek];
-        let done = false;
-        if (log) {
-          if (ex.progression) {
-            const phases = ex.progression === 'pullup' ? PULLUP_PHASES : ex.progression === 'pike' ? PIKE_PHASES : PUSHUP_PHASES;
-            const phase = phases[getProgressionPhase(ex.progression).phaseIndex];
-            const psc = phase.exercises.map(pe => parseInt(pe.sets) || 3);
-            done = phase.exercises.some((pe, exIdx) => {
-              const offset = psc.slice(0, exIdx).reduce((a, b) => a + b, 0);
-              return Array.from({length: psc[exIdx]}, (_, s) => log.checked[offset + s]).every(Boolean);
-            });
-          } else {
-            done = log.checked.filter(Boolean).length === ex.sets;
+      try {
+        day.exercises.forEach(ex => {
+          const ek = exKey(planDay, ex.name);
+          const log = state.setLogs[ek];
+          let done = false;
+          if (log) {
+            if (ex.progression) {
+              const phases = ex.progression === 'pullup' ? PULLUP_PHASES : ex.progression === 'pike' ? PIKE_PHASES : PUSHUP_PHASES;
+              const phase = phases[getProgressionPhase(ex.progression).phaseIndex];
+              const psc = phase.exercises.map(pe => parseInt(pe.sets) || 3);
+              done = phase.exercises.some((pe, exIdx) => {
+                const offset = psc.slice(0, exIdx).reduce((a, b) => a + b, 0);
+                return Array.from({length: psc[exIdx]}, (_, s) => log.checked[offset + s]).every(Boolean);
+              });
+            } else {
+              done = log.checked.filter(Boolean).length === ex.sets;
+            }
           }
-        }
-        state.completedExercises[k + '__' + planDay + '__' + ex.name] = done;
-      });
-      try { localStorage.setItem(COMPLETED_EX_KEY, JSON.stringify(state.completedExercises)); } catch(e) {}
+          state.completedExercises[k + '__' + planDay + '__' + ex.name] = done;
+        });
+        localStorage.setItem(COMPLETED_EX_KEY, JSON.stringify(state.completedExercises));
+      } catch(e) {}
 
       // Snapshot weights for clipboard history
-      day.exercises.forEach(ex => {
-        const ek = exKey(planDay, ex.name);
-        const log = state.setLogs[ek];
-        if (log && log.weights.some(w => w)) {
-          if (!state.weightHistory[ek]) state.weightHistory[ek] = {};
-          state.weightHistory[ek][k] = { weights: [...log.weights], reps: [...log.reps], checked: [...log.checked] };
-        }
-      });
-      saveWeightHistory();
+      try {
+        day.exercises.forEach(ex => {
+          const ek = exKey(planDay, ex.name);
+          const log = state.setLogs[ek];
+          if (log && log.weights && log.weights.some(w => w)) {
+            if (!state.weightHistory[ek]) state.weightHistory[ek] = {};
+            state.weightHistory[ek][k] = { weights: [...log.weights], reps: [...(log.reps || [])], checked: [...(log.checked || [])] };
+          }
+        });
+        saveWeightHistory();
+      } catch(e) {}
     }
 
     // Show completion modal
