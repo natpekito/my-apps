@@ -4012,13 +4012,29 @@ function tickGuidedTimer() {
       playBeep('switch');
       if (navigator.vibrate) navigator.vibrate([80]);
       gs.segmentIndex++;
-      gs.endTime = Date.now() + gs.totalSecs * 1000;
-      gs.interval = setInterval(tickGuidedTimer, 200);
       renderGuidedStep();
+      // 3-second pause to switch sides before restarting
+      let switchCountdown = 3;
+      const switchInterval = setInterval(() => {
+        switchCountdown--;
+        const num = document.getElementById('gs-ring-num');
+        if (num) num.textContent = switchCountdown > 0 ? switchCountdown : 'GO';
+        if (switchCountdown <= 0) {
+          clearInterval(switchInterval);
+          gs.endTime = Date.now() + gs.totalSecs * 1000;
+          gs.interval = setInterval(tickGuidedTimer, 200);
+        }
+      }, 1000);
     } else {
       playBeep('done');
       if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
-      setTimeout(() => { guidedNextStep(); }, 800);
+      // If jump rope (index 0), show a continue button instead of auto-advancing
+      const stretch = gs.stretches[gs.index];
+      if (stretch.name === 'Jump Rope') {
+        showGuidedContinue();
+      } else {
+        setTimeout(() => { guidedNextStep(); }, 800);
+      }
     }
   }
 }
@@ -4117,6 +4133,29 @@ function renderGuidedStep() {
     </div>`;
   const circle = document.getElementById('gs-ring-circle');
   if (circle) circle.style.strokeDashoffset = 0;
+}
+
+function showGuidedContinue() {
+  const overlay = document.getElementById('guided-stretch-overlay');
+  if (!overlay) return;
+  const c = guidedStretch.color;
+  const gs = guidedStretch;
+  const total = gs.stretches.length;
+  overlay.innerHTML = `
+    <div style="width:100%;max-width:360px;text-align:center">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <button onclick="closeGuidedStretch()" style="background:none;border:none;color:rgba(255,255,255,0.4);font-size:22px;cursor:pointer;padding:4px">✕</button>
+        <span style="font-size:11px;color:rgba(255,255,255,0.35);letter-spacing:1px;text-transform:uppercase">${gs.index + 1} of ${total}</span>
+        <div style="width:30px"></div>
+      </div>
+      <div class="gs-progress-bar-track" style="margin-bottom:32px">
+        <div class="gs-progress-bar-fill" style="width:${((gs.index + 1)/total*100).toFixed(1)}%;background:${c}"></div>
+      </div>
+      <div style="font-size:48px;margin-bottom:16px">✅</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:32px;color:${c};margin-bottom:8px">Jump Rope Done!</div>
+      <div style="font-size:14px;color:rgba(255,255,255,0.45);margin-bottom:32px">Catch your breath, then continue to stretching.</div>
+      <button class="gs-btn gs-btn-primary" style="font-size:16px;padding:14px 40px" onclick="guidedNextStep()">Continue to Stretches →</button>
+    </div>`;
 }
 
 function showGuidedDone() {
