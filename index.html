@@ -4012,15 +4012,18 @@ function tickGuidedTimer() {
       playBeep('switch');
       if (navigator.vibrate) navigator.vibrate([80]);
       gs.segmentIndex++;
-      renderGuidedStep();
-      // 3-second pause to switch sides before restarting
+      // 3-second pause before restarting — show countdown in the ring
       let switchCountdown = 3;
+      renderGuidedStep();
+      const num = document.getElementById('gs-ring-num');
+      if (num) num.textContent = switchCountdown;
       const switchInterval = setInterval(() => {
         switchCountdown--;
-        const num = document.getElementById('gs-ring-num');
-        if (num) num.textContent = switchCountdown > 0 ? switchCountdown : 'GO';
+        const n = document.getElementById('gs-ring-num');
+        if (n) n.textContent = switchCountdown > 0 ? switchCountdown : 'GO';
         if (switchCountdown <= 0) {
           clearInterval(switchInterval);
+          playBeep('start');
           gs.endTime = Date.now() + gs.totalSecs * 1000;
           gs.interval = setInterval(tickGuidedTimer, 200);
         }
