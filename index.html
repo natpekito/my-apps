@@ -2297,16 +2297,17 @@ function getLastSessionData(dayName, exName, currentSets) {
   const historicalLog = historyForEx && historyForEx[lastSession.key];
   const log = historicalLog || state.setLogs[k];
 
-  if (!log || !log.weights.some(w => w)) return null;
+  const hasWeights = log && log.weights && log.weights.some(w => w);
+  const hasReps = log && log.reps && log.reps.some(r => r);
+  if (!log || (!hasWeights && !hasReps)) return null;
 
   // Calculate stats
-  const weights = log.weights.slice(0, currentSets);
-  const checked = log.checked.slice(0, currentSets);
+  const weights = (log.weights || []).slice(0, currentSets);
+  const repsLog = (log.reps || []).slice(0, currentSets);
+  const checked = (log.checked || []).slice(0, currentSets);
   const weightValues = weights.map(w => parseFloat(w)).filter(n => !isNaN(n) && n > 0);
 
-  if (!weightValues.length) return null;
-
-  const avgWeight = weightValues.reduce((a, b) => a + b, 0) / weightValues.length;
+  const avgWeight = weightValues.length ? weightValues.reduce((a, b) => a + b, 0) / weightValues.length : 0;
   const completedSets = checked.filter(Boolean).length;
   const allComplete = completedSets === currentSets;
 
@@ -2314,10 +2315,12 @@ function getLastSessionData(dayName, exName, currentSets) {
   const daysAgo = Math.floor((today - lastSession.date) / (1000 * 60 * 60 * 24));
   const dateStr = daysAgo === 7 ? '7 days ago' : (daysAgo === 1 ? 'yesterday' : `${daysAgo} days ago`);
 
-  // Build reps display
-  const repsDisplay = weights.map((w, i) => w ? (checked[i] ? '✓' : '○') : '—').join(', ');
+  // Build reps display — show actual logged reps if no weight
+  const repsDisplay = weights.length
+    ? weights.map((w, i) => w ? (checked[i] ? '✓' : '○') : (repsLog[i] ? repsLog[i] + ' reps' : '—')).join(', ')
+    : repsLog.map((r, i) => r ? (checked[i] ? `✓ ${r}` : r + ' reps') : '—').join(', ');
 
-  // Calculate volume (estimate based on weight)
+  // Calculate volume
   const day = PLAN[dayName];
   const ex = day?.exercises?.find(e => e.name === exName);
   const repsPerSet = ex ? parseInt((ex.reps || '').toString().split('–')[0]) || 10 : 10;
@@ -2325,25 +2328,27 @@ function getLastSessionData(dayName, exName, currentSets) {
 
   // Smart suggestion
   let suggestion = '';
-  if (allComplete && avgWeight > 0) {
-    const nextWeight = DB_WEIGHTS.find(w => w > avgWeight);
-    if (nextWeight) {
-      suggestion = `💡 All sets complete! Ready to try ${nextWeight} lbs today`;
-    } else {
-      suggestion = `💪 Max weight! Consider adding reps or slowing tempo`;
+  if (weightValues.length) {
+    if (allComplete && avgWeight > 0) {
+      const nextWeight = DB_WEIGHTS.find(w => w > avgWeight);
+      suggestion = nextWeight ? `💡 All sets complete! Ready to try ${nextWeight} lbs today` : `💪 Max weight! Consider adding reps or slowing tempo`;
+    } else if (completedSets > 0 && completedSets < currentSets) {
+      suggestion = `💡 Keep ${avgWeight.toFixed(2)} lbs, aim for all ${currentSets} sets today`;
+    } else if (completedSets === 0) {
+      suggestion = `💡 Last time was challenging — consider ${avgWeight.toFixed(2)} lbs or lighter`;
     }
-  } else if (completedSets > 0 && completedSets < currentSets) {
-    suggestion = `💡 Keep ${avgWeight.toFixed(2)} lbs, aim for all ${currentSets} sets today`;
-  } else if (completedSets === 0) {
-    suggestion = `💡 Last time was challenging — consider ${avgWeight.toFixed(2)} lbs or lighter`;
+  } else if (repsLog.some(r => r)) {
+    const avgReps = repsLog.filter(r => r).map(Number).reduce((a, b) => a + b, 0) / repsLog.filter(r => r).length;
+    suggestion = allComplete ? `💡 Last time: ~${Math.round(avgReps)} reps/set — try to match or beat it` : `💡 Aim to complete all ${currentSets} sets`;
   }
 
   return {
     date: lastSession.date,
     dateStr,
     daysAgo,
-    weight: avgWeight.toFixed(2),
+    weight: avgWeight > 0 ? avgWeight.toFixed(2) : null,
     weights,
+    reps: repsLog,
     repsDisplay,
     completedSets,
     totalSets: currentSets,
@@ -2865,11 +2870,10 @@ function copyLastWeek(k, numSets) {
     state.setLogs[k] = { checked: Array(numSets).fill(false), weights: Array(numSets).fill(''), reps: Array(numSets).fill('') };
   }
 
-  // Copy weights from last session into state
+  // Copy weights and reps from last session into state
   for (let i = 0; i < numSets; i++) {
-    if (data.weights[i]) {
-      state.setLogs[k].weights[i] = data.weights[i];
-    }
+    if (data.weights[i]) state.setLogs[k].weights[i] = data.weights[i];
+    if (data.reps && data.reps[i]) state.setLogs[k].reps[i] = data.reps[i];
   }
 
   // Also expand the card so the user can see the filled weights
