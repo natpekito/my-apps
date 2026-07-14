@@ -2367,7 +2367,8 @@ function getLastSessionData(dayName, exName, currentSets) {
 
   const hasWeights = log && log.weights && log.weights.some(w => w);
   const hasReps = log && log.reps && log.reps.some(r => r);
-  if (!log || (!hasWeights && !hasReps)) return null;
+  const hasChecked = log && log.checked && log.checked.some(c => c);
+  if (!log || (!hasWeights && !hasReps && !hasChecked)) return null;
 
   // Calculate stats
   const weights = (log.weights || []).slice(0, currentSets);
@@ -2384,9 +2385,14 @@ function getLastSessionData(dayName, exName, currentSets) {
   const dateStr = daysAgo === 7 ? '7 days ago' : (daysAgo === 1 ? 'yesterday' : `${daysAgo} days ago`);
 
   // Build reps display — show actual logged reps if no weight
-  const repsDisplay = weights.length
-    ? weights.map((w, i) => w ? (checked[i] ? '✓' : '○') : (repsLog[i] ? repsLog[i] + ' reps' : '—')).join(', ')
-    : repsLog.map((r, i) => r ? (checked[i] ? `✓ ${r}` : r + ' reps') : '—').join(', ');
+  let repsDisplay;
+  if (hasWeights) {
+    repsDisplay = weights.map((w, i) => w ? (checked[i] ? '✓' : '○') : (repsLog[i] ? repsLog[i] + ' reps' : '—')).join(', ');
+  } else if (hasReps) {
+    repsDisplay = repsLog.map((r, i) => r ? (checked[i] ? `✓ ${r}` : r + ' reps') : (checked[i] ? '✓' : '—')).join(', ');
+  } else {
+    repsDisplay = checked.map(c => c ? '✓' : '—').join(', ');
+  }
 
   // Calculate volume
   const day = PLAN[dayName];
@@ -2405,9 +2411,11 @@ function getLastSessionData(dayName, exName, currentSets) {
     } else if (completedSets === 0) {
       suggestion = `💡 Last time was challenging — consider ${avgWeight.toFixed(2)} lbs or lighter`;
     }
-  } else if (repsLog.some(r => r)) {
+  } else if (hasReps) {
     const avgReps = repsLog.filter(r => r).map(Number).reduce((a, b) => a + b, 0) / repsLog.filter(r => r).length;
     suggestion = allComplete ? `💡 Last time: ~${Math.round(avgReps)} reps/set — try to match or beat it` : `💡 Aim to complete all ${currentSets} sets`;
+  } else if (hasChecked) {
+    suggestion = allComplete ? `💡 All ${currentSets} sets done last time — keep it up!` : `💡 Got ${completedSets}/${currentSets} last time — aim for all ${currentSets} today`;
   }
 
   return {
@@ -2778,9 +2786,10 @@ function toggleToday() {
         day.exercises.forEach(ex => {
           const ek = exKey(planDay, ex.name);
           const log = state.setLogs[ek];
-          if (log && log.weights && log.weights.some(w => w)) {
+          const hasAny = log && ((log.weights && log.weights.some(w => w)) || (log.reps && log.reps.some(r => r)) || (log.checked && log.checked.some(c => c)));
+          if (hasAny) {
             if (!state.weightHistory[ek]) state.weightHistory[ek] = {};
-            state.weightHistory[ek][k] = { weights: [...log.weights], reps: [...(log.reps || [])], checked: [...(log.checked || [])] };
+            state.weightHistory[ek][k] = { weights: [...(log.weights || [])], reps: [...(log.reps || [])], checked: [...(log.checked || [])] };
           }
         });
         saveWeightHistory();
@@ -3085,7 +3094,7 @@ function copyLastWeek(k, numSets) {
   const exName = parts.slice(1).join('__');
 
   const data = getLastSessionData(dayName, exName, numSets);
-  if (!data || !data.weights.length) {
+  if (!data) {
     // Show a toast instead of alert (alert can be blocked on iOS Safari)
     const toast = document.createElement('div');
     toast.textContent = 'No previous session data yet — complete a workout first';
@@ -3352,7 +3361,7 @@ function handleReset(dayName) {
     day.exercises.forEach(ex => {
       const ek = exKey(dayName, ex.name);
       const log = state.setLogs[ek];
-      const hasData = log && ((log.weights && log.weights.some(w => w)) || (log.reps && log.reps.some(r => r)));
+      const hasData = log && ((log.weights && log.weights.some(w => w)) || (log.reps && log.reps.some(r => r)) || (log.checked && log.checked.some(c => c)));
       if (hasData) {
         if (!state.weightHistory[ek]) state.weightHistory[ek] = {};
         if (!state.weightHistory[ek][lastKey]) {
