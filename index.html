@@ -2735,6 +2735,10 @@ function toggleToday() {
     state.completed[k] = planDay;
     const elapsed = getSessionElapsed();
     if (elapsed > 0) state.sessionDurations[k] = elapsed;
+    // Stop the session timer
+    if (sessionTimerInterval) clearInterval(sessionTimerInterval);
+    state.sessionPaused = true;
+    saveSessionState();
     const vol = computeSessionVolume(planDay);
     if (vol > 0) state.volume[k] = vol;
 
