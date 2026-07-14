@@ -3346,6 +3346,22 @@ function handleReset(dayName) {
     return;
   }
   const day = PLAN[dayName];
+  // Before clearing, snapshot current logs into weightHistory so clipboard still works
+  const lastKey = getLastCompletedDateForDay(dayName);
+  if (lastKey) {
+    day.exercises.forEach(ex => {
+      const ek = exKey(dayName, ex.name);
+      const log = state.setLogs[ek];
+      const hasData = log && ((log.weights && log.weights.some(w => w)) || (log.reps && log.reps.some(r => r)));
+      if (hasData) {
+        if (!state.weightHistory[ek]) state.weightHistory[ek] = {};
+        if (!state.weightHistory[ek][lastKey]) {
+          state.weightHistory[ek][lastKey] = { weights: [...(log.weights||[])], reps: [...(log.reps||[])], checked: [...(log.checked||[])] };
+        }
+      }
+    });
+    saveWeightHistory();
+  }
   day.exercises.forEach(ex => {
     state.setLogs[exKey(dayName, ex.name)] = {
       checked: Array(ex.sets).fill(false),
