@@ -3215,6 +3215,7 @@ function toggleSet(k, idx, btn) {
   state.setLogs[k].checked[idx] = !wasChecked;
   btn.classList.toggle('checked', state.setLogs[k].checked[idx]);
   btn.textContent = state.setLogs[k].checked[idx] ? '✓' : '';
+
   saveSetLogs();
   updateExerciseBadge(k);
 
@@ -3222,6 +3223,21 @@ function toggleSet(k, idx, btn) {
   if (!wasChecked) {
     const day = PLAN[dayName];
     const ex = day && day.exercises && day.exercises.find(e => e.name === exName);
+
+    // Auto-fill target reps if no reps entered
+    if (!state.setLogs[k].reps || !state.setLogs[k].reps[idx] || state.setLogs[k].reps[idx] === '') {
+      if (ex && ex.reps && !ex.progression) {
+        const repStr = (ex.reps || '').toString();
+        const repMatch = repStr.match(/(\d+)/);
+        if (repMatch) {
+          if (!state.setLogs[k].reps) state.setLogs[k].reps = Array(state.setLogs[k].checked.length).fill('');
+          state.setLogs[k].reps[idx] = repMatch[1];
+          const repInput = document.getElementById('reps-input-' + k + '-' + idx);
+          if (repInput) repInput.value = repMatch[1];
+          saveSetLogs();
+        }
+      }
+    }
     let restSec = 90;
     if (ex && ex.rest) {
       const m = ex.rest.match(/(\d+)\s*min/);
