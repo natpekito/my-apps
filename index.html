@@ -2759,86 +2759,121 @@ function toggleToday() {
     render();
   } else {
     // Completing - show summary
-    state.completed[k] = planDay;
-    let elapsed = getSessionElapsed();
-    // If timer wasn't running, ask for manual entry
+    const elapsed = getSessionElapsed();
+    // If timer wasn't running, show manual time input
     if (elapsed <= 0) {
-      const input = prompt('Timer wasn\'t started. Enter your session time in minutes (or leave blank to skip):');
-      if (input && !isNaN(parseFloat(input)) && parseFloat(input) > 0) {
-        elapsed = Math.round(parseFloat(input) * 60);
-      }
+      showManualTimeInput(planDay);
+      return;
     }
-    if (elapsed > 0) state.sessionDurations[k] = elapsed;
-    // Stop the session timer
-    if (sessionTimerInterval) clearInterval(sessionTimerInterval);
-    state.sessionPaused = true;
-    saveSessionState();
-    const vol = computeSessionVolume(planDay);
-    if (vol > 0) state.volume[k] = vol;
+    state.completed[k] = planDay;
+    completeWorkout(k, planDay, elapsed);
+  }
+}
 
-    // Collect any new PRs from this session
-    const day = PLAN[planDay];
-    const newPRs = [];
-    if (day && day.exercises) {
+function completeWorkout(k, planDay, elapsed) {
+  if (elapsed > 0) state.sessionDurations[k] = elapsed;
+  // Stop the session timer
+  if (sessionTimerInterval) clearInterval(sessionTimerInterval);
+  state.sessionPaused = true;
+  saveSessionState();
+
+  const vol = computeSessionVolume(planDay);
+  if (vol > 0) state.volume[k] = vol;
+
+  // Collect any new PRs from this session
+  const day = PLAN[planDay];
+  const newPRs = [];
+  if (day && day.exercises) {
+    day.exercises.forEach(ex => {
+      if (ex.progression) return;
+      const exKey_ = exKey(planDay, ex.name);
+      const prInfo = state.prs[exKey_];
+      if (prInfo && prInfo.date === new Date().toLocaleDateString()) {
+        newPRs.push(`${ex.name}: ${prInfo.weight} lbs`);
+      }
+    });
+  }
+
+  saveDurations();
+  saveVolume();
+  saveCompleted();
+
+  // Snapshot which exercises were completed at time of marking done
+  if (day && day.exercises) {
+    try {
       day.exercises.forEach(ex => {
-        if (ex.progression) return;
-        const exKey_ = exKey(planDay, ex.name);
-        const prInfo = state.prs[exKey_];
-        if (prInfo && prInfo.date === new Date().toLocaleDateString()) {
-          newPRs.push(`${ex.name}: ${prInfo.weight} lbs`);
+        const ek = exKey(planDay, ex.name);
+        const log = state.setLogs[ek];
+        let done = false;
+        if (log) {
+          if (ex.progression) {
+            const phases = ex.progression === 'pullup' ? PULLUP_PHASES : ex.progression === 'pike' ? PIKE_PHASES : PUSHUP_PHASES;
+            const phase = phases[getProgressionPhase(ex.progression).phaseIndex];
+            const psc = phase.exercises.map(pe => parseInt(pe.sets) || 3);
+            done = phase.exercises.some((pe, exIdx) => {
+              const offset = psc.slice(0, exIdx).reduce((a, b) => a + b, 0);
+              return Array.from({length: psc[exIdx]}, (_, s) => log.checked[offset + s]).every(Boolean);
+            });
+          } else {
+            done = log.checked.filter(Boolean).length === ex.sets;
+          }
+        }
+        state.completedExercises[k + '__' + planDay + '__' + ex.name] = done;
+      });
+      localStorage.setItem(COMPLETED_EX_KEY, JSON.stringify(state.completedExercises));
+    } catch(e) {}
+
+    // Snapshot weights for clipboard history
+    try {
+      day.exercises.forEach(ex => {
+        const ek = exKey(planDay, ex.name);
+        const log = state.setLogs[ek];
+        const hasAny = log && ((log.weights && log.weights.some(w => w)) || (log.reps && log.reps.some(r => r)) || (log.checked && log.checked.some(c => c)));
+        if (hasAny) {
+          if (!state.weightHistory[ek]) state.weightHistory[ek] = {};
+          state.weightHistory[ek][k] = { weights: [...(log.weights || [])], reps: [...(log.reps || [])], checked: [...(log.checked || [])] };
         }
       });
-    }
-
-    saveDurations();
-    saveVolume();
-    saveCompleted();
-
-    // Snapshot which exercises were completed at time of marking done
-    if (day && day.exercises) {
-      try {
-        day.exercises.forEach(ex => {
-          const ek = exKey(planDay, ex.name);
-          const log = state.setLogs[ek];
-          let done = false;
-          if (log) {
-            if (ex.progression) {
-              const phases = ex.progression === 'pullup' ? PULLUP_PHASES : ex.progression === 'pike' ? PIKE_PHASES : PUSHUP_PHASES;
-              const phase = phases[getProgressionPhase(ex.progression).phaseIndex];
-              const psc = phase.exercises.map(pe => parseInt(pe.sets) || 3);
-              done = phase.exercises.some((pe, exIdx) => {
-                const offset = psc.slice(0, exIdx).reduce((a, b) => a + b, 0);
-                return Array.from({length: psc[exIdx]}, (_, s) => log.checked[offset + s]).every(Boolean);
-              });
-            } else {
-              done = log.checked.filter(Boolean).length === ex.sets;
-            }
-          }
-          state.completedExercises[k + '__' + planDay + '__' + ex.name] = done;
-        });
-        localStorage.setItem(COMPLETED_EX_KEY, JSON.stringify(state.completedExercises));
-      } catch(e) {}
-
-      // Snapshot weights for clipboard history
-      try {
-        day.exercises.forEach(ex => {
-          const ek = exKey(planDay, ex.name);
-          const log = state.setLogs[ek];
-          const hasAny = log && ((log.weights && log.weights.some(w => w)) || (log.reps && log.reps.some(r => r)) || (log.checked && log.checked.some(c => c)));
-          if (hasAny) {
-            if (!state.weightHistory[ek]) state.weightHistory[ek] = {};
-            state.weightHistory[ek][k] = { weights: [...(log.weights || [])], reps: [...(log.reps || [])], checked: [...(log.checked || [])] };
-          }
-        });
-        saveWeightHistory();
-      } catch(e) {}
-    }
-
-    // Show completion modal
-    showCompletionSummary(planDay, elapsed, vol, newPRs);
-
-    render();
+      saveWeightHistory();
+    } catch(e) {}
   }
+
+  // Show completion modal
+  showCompletionSummary(planDay, elapsed, vol, newPRs);
+  render();
+}
+
+function showManualTimeInput(planDay) {
+  const k = todayKey();
+  const day = PLAN[planDay];
+  const color = day ? day.color : '#60B8FF';
+  const overlay = document.getElementById('completion-modal-overlay');
+  const modal = document.getElementById('completion-modal');
+  modal.innerHTML = `
+    <div style="text-align:center">
+      <div style="font-size:36px;margin-bottom:12px">⏱</div>
+      <div style="font-size:16px;font-weight:800;color:#fff;margin-bottom:6px">Timer wasn't started</div>
+      <div style="font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:20px">How long was your session?</div>
+      <input id="manual-time-input" type="number" inputmode="numeric" placeholder="Minutes" style="width:120px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:12px;color:#fff;font-size:20px;font-weight:700;text-align:center;padding:12px;font-family:'DM Sans',sans-serif;outline:none" autofocus>
+      <div style="display:flex;gap:10px;margin-top:20px;justify-content:center">
+        <button onclick="submitManualTime('${planDay}')" style="flex:1;background:${color};border:none;border-radius:12px;color:#fff;font-size:14px;font-weight:700;padding:12px 20px;cursor:pointer;font-family:'DM Sans',sans-serif">Done</button>
+        <button onclick="submitManualTime('${planDay}', true)" style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:12px;color:rgba(255,255,255,0.5);font-size:14px;font-weight:700;padding:12px 20px;cursor:pointer;font-family:'DM Sans',sans-serif">Skip</button>
+      </div>
+    </div>`;
+  overlay.classList.add('open');
+}
+
+function submitManualTime(planDay, skip) {
+  const k = todayKey();
+  let elapsed = 0;
+  if (!skip) {
+    const input = document.getElementById('manual-time-input');
+    const val = parseFloat(input?.value);
+    if (val && val > 0) elapsed = Math.round(val * 60);
+  }
+  document.getElementById('completion-modal-overlay').classList.remove('open');
+  state.completed[k] = planDay;
+  completeWorkout(k, planDay, elapsed);
 }
 
 function calToggle(key, dayName) {
