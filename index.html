@@ -2508,7 +2508,7 @@ function buildLastSessionPreview(dayName, exName, numSets, color) {
 }
 
 // ── Weight selector for DB/Band exercises ──────────────────
-const DB_WEIGHTS = [6.5, 12, 17.5, 22.5];
+const DB_WEIGHTS = [1.5, 8.5];
 const KB_WEIGHTS = [5, 10.5, 16, 23];
 const BAND_COLORS = [
   { label: 'Yellow',  value: 'Yellow',  range: '5–15 lbs',   hex: '#eab308' },
@@ -2760,7 +2760,14 @@ function toggleToday() {
   } else {
     // Completing - show summary
     state.completed[k] = planDay;
-    const elapsed = getSessionElapsed();
+    let elapsed = getSessionElapsed();
+    // If timer wasn't running, ask for manual entry
+    if (elapsed <= 0) {
+      const input = prompt('Timer wasn\'t started. Enter your session time in minutes (or leave blank to skip):');
+      if (input && !isNaN(parseFloat(input)) && parseFloat(input) > 0) {
+        elapsed = Math.round(parseFloat(input) * 60);
+      }
+    }
     if (elapsed > 0) state.sessionDurations[k] = elapsed;
     // Stop the session timer
     if (sessionTimerInterval) clearInterval(sessionTimerInterval);
