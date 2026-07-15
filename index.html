@@ -2386,10 +2386,23 @@ function getLastSessionData(dayName, exName, currentSets) {
   const daysAgo = Math.floor((today - lastSession.date) / (1000 * 60 * 60 * 24));
   const dateStr = daysAgo === 7 ? '7 days ago' : (daysAgo === 1 ? 'yesterday' : `${daysAgo} days ago`);
 
-  // Build reps display — show actual logged reps if no weight
+  // Build reps display
+  const bandNames = ['Yellow','Black','Green','Red'];
+  const isBandExercise = hasWeights && weights.some(w => bandNames.includes(w));
   let repsDisplay;
-  if (hasWeights) {
-    repsDisplay = weights.map((w, i) => w ? (checked[i] ? '✓' : '○') : (repsLog[i] ? repsLog[i] + ' reps' : '—')).join(', ');
+  if (isBandExercise) {
+    const bandUsed = weights.find(w => bandNames.includes(w)) || '';
+    const repVals = repsLog.filter(r => r);
+    repsDisplay = repVals.length
+      ? `${bandUsed} band • ${repVals.join(', ')} reps`
+      : `${bandUsed} band • ${completedSets}/${currentSets} sets`;
+  } else if (hasWeights) {
+    repsDisplay = weights.map((w, i) => {
+      const rep = repsLog[i];
+      if (w && rep) return `${w} lbs × ${rep}`;
+      if (w) return checked[i] ? '✓' : '○';
+      return rep ? rep + ' reps' : '—';
+    }).join(', ');
   } else if (hasReps) {
     repsDisplay = repsLog.map((r, i) => r ? (checked[i] ? `✓ ${r}` : r + ' reps') : (checked[i] ? '✓' : '—')).join(', ');
   } else {
