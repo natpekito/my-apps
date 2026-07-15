@@ -2508,8 +2508,12 @@ function buildLastSessionPreview(dayName, exName, numSets, color) {
 }
 
 // ── Weight selector for DB/Band exercises ──────────────────
-const DB_WEIGHTS = [1.5, 8.5];
-const KB_WEIGHTS = [5, 10.5, 16, 23];
+const DB_WEIGHT_SETS = [
+  { label: 'Weider', weights: [3.85, 6.35, 8.85, 11.35] },
+  { label: 'Fitplam', weights: [7, 8.5, 10.5, 14, 16, 17.5, 23] },
+];
+const DB_WEIGHTS = DB_WEIGHT_SETS.flatMap(s => s.weights).sort((a,b) => a - b);
+const KB_WEIGHTS = [7, 8.5, 10.5, 14, 16, 17.5, 23];
 const BAND_COLORS = [
   { label: 'Yellow',  value: 'Yellow',  range: '5–15 lbs',   hex: '#eab308' },
   { label: 'Black',   value: 'Black',   range: '15–35 lbs',  hex: '#6b7280' },
@@ -2537,15 +2541,28 @@ function buildMasterWeightSelector(k, numSets, equipment) {
     </div>`;
   }
 
-  const weights = isKB ? KB_WEIGHTS : DB_WEIGHTS;
-  const label = isKB ? 'Kettlebell weight for all sets' : 'Set weight for all sets';
-  const buttons = weights.map(w =>
-    `<button class="weight-btn" onclick="setAllWeights('${k}',${numSets},${w})">${w} lbs</button>`
+  if (isKB) {
+    const buttons = KB_WEIGHTS.map(w =>
+      `<button class="weight-btn" onclick="setAllWeights('${k}',${numSets},${w})">${w}</button>`
+    ).join('');
+    return `<div style="margin-bottom:8px">
+      <div style="font-size:10px;letter-spacing:1px;color:rgba(255,255,255,0.3);text-transform:uppercase;margin-bottom:6px">Kettlebell weight for all sets</div>
+      <div class="weight-quick-select">${buttons}</div>
+    </div>`;
+  }
+
+  const groups = DB_WEIGHT_SETS.map(set =>
+    `<div style="margin-bottom:6px">
+      <div style="font-size:9px;color:rgba(255,255,255,0.25);margin-bottom:4px">${set.label}</div>
+      <div class="weight-quick-select">${set.weights.map(w =>
+        `<button class="weight-btn" onclick="setAllWeights('${k}',${numSets},${w})">${w}</button>`
+      ).join('')}</div>
+    </div>`
   ).join('');
 
   return `<div style="margin-bottom:8px">
-    <div style="font-size:10px;letter-spacing:1px;color:rgba(255,255,255,0.3);text-transform:uppercase;margin-bottom:6px">${label}</div>
-    <div class="weight-quick-select">${buttons}</div>
+    <div style="font-size:10px;letter-spacing:1px;color:rgba(255,255,255,0.3);text-transform:uppercase;margin-bottom:6px">Set weight for all sets</div>
+    ${groups}
   </div>`;
 }
 
