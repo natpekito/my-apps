@@ -2402,9 +2402,15 @@ function getLastSessionData(dayName, exName, currentSets) {
   const repsPerSet = ex ? parseInt((ex.reps || '').toString().split('–')[0]) || 10 : 10;
   const volume = Math.round(weightValues.reduce((sum, w) => sum + (w * repsPerSet), 0));
 
-  // Smart suggestion
+  // Smart suggestion (skip for progression exercises — set count doesn't apply the same way)
+  const isProgression = ex && ex.progression;
   let suggestion = '';
-  if (weightValues.length) {
+  if (isProgression) {
+    if (hasReps) {
+      const avgReps = repsLog.filter(r => r).map(Number).reduce((a, b) => a + b, 0) / repsLog.filter(r => r).length;
+      suggestion = `💡 Last time: ~${Math.round(avgReps)} reps/set`;
+    }
+  } else if (weightValues.length) {
     if (allComplete && avgWeight > 0) {
       const exObj = day?.exercises?.find(e => e.name === exName);
       const weightList = (exObj && exObj.eq && exObj.eq.toLowerCase().includes('kettlebell')) ? KB_WEIGHTS : DB_WEIGHTS;
