@@ -227,7 +227,7 @@
   /* Completion Summary Modal */
   #completion-modal-overlay { position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
   #completion-modal-overlay.open { opacity: 1; pointer-events: all; }
-  #completion-modal { width: 90%; max-width: 380px; background: #14141e; border: 1px solid rgba(255,255,255,0.15); border-radius: 20px; padding: 24px; transform: scale(0.9); transition: transform 0.3s cubic-bezier(.22,1,.36,1); }
+  #completion-modal { width: 90%; max-width: 380px; max-height: 85vh; overflow-y: auto; background: #14141e; border: 1px solid rgba(255,255,255,0.15); border-radius: 20px; padding: 24px; transform: scale(0.9); transition: transform 0.3s cubic-bezier(.22,1,.36,1); }
   #completion-modal-overlay.open #completion-modal { transform: scale(1); }
   .completion-emoji { font-size: 48px; text-align: center; margin-bottom: 12px; }
   .completion-title { font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 2px; text-align: center; margin-bottom: 8px; }
