@@ -4444,6 +4444,10 @@ function startGuidedTimer() {
   gs.pausedAt = null;
   gs.endTime = Date.now() + gs.totalSecs * 1000;
   gs.interval = setInterval(tickGuidedTimer, 200);
+  // Auto-start session timer on first exercise if not already running
+  if (gs.index === 0 && !state.sessionStart && !state.sessionElapsedBeforePause) {
+    startSessionTimer();
+  }
 }
 
 function tickGuidedTimer() {
