@@ -688,7 +688,6 @@ const PLAN = {
         setup: '🪑 Sit upright (or stand tall, core tight). Start with DBs at shoulder height, palms facing forward, elbows at 90°. Press straight up until arms are nearly locked — don\'t shrug your traps. Lower slowly back to start. Keep your lower back from arching; brace your core the whole set. Avoid pressing behind your head — straight up and slightly forward is safer for your shoulder joint.' },
       { name: 'Lateral Raises',          sets: 3, reps: '12',    eq: 'DB',          rest: '60 sec', muscles: 'Side Delts',
         setup: '⬆️ Stand with DBs at your sides, slight bend in elbows. Raise arms out to the side until roughly parallel to the floor — like pouring water out of a jug (pinky side slightly higher than thumb). Lead with your elbows, not your hands. Control the descent — don\'t let gravity drop them. Use lighter weight than you think. If you\'re shrugging to get them up, the weight is too heavy.' },
-      { name: 'Pike Push-ups',           sets: 3, reps: 'Phase-based', eq: 'Push-up Handles',  rest: '60 sec', muscles: 'Shoulders · Triceps · Upper Chest', progression: 'pike' },
       { name: 'Tricep Dips on Bench',    sets: 3, reps: '12',    eq: 'Bench',       rest: '60 sec', muscles: 'Triceps · Chest · Front Delts',
         setup: '🪑 Sit on edge of bench, hands gripping the edge beside your hips, fingers pointing forward. Scoot your hips off the bench and lower your body by bending your elbows — keep them pointing straight back, not flaring out. Lower until elbows hit 90°, then press back up. Keep your back close to the bench the whole time. Feet flat on floor for easier, legs extended for harder.' },
       { name: 'Band Tricep Pushdowns',   sets: 3, reps: '15',    eq: 'Band',        rest: '60 sec', muscles: 'Triceps (all 3 heads)',
@@ -2103,10 +2102,8 @@ function buildSunday() {
 function buildProgressionOverview() {
   const puProg = getProgressionPhase('pullup');
   const psProg = getProgressionPhase('pushup');
-  const pkProg = getProgressionPhase('pike');
   const puPhase = PULLUP_PHASES[puProg.phaseIndex];
   const psPhase = PUSHUP_PHASES[psProg.phaseIndex];
-  const pkPhase = PIKE_PHASES[pkProg.phaseIndex];
 
   function miniPhaseBar(phases, idx) {
     return phases.map((p, i) => {
@@ -2130,19 +2127,12 @@ function buildProgressionOverview() {
     return `<div style="width:9px;height:9px;border-radius:50%;background:${filled ? psPhase.color : 'rgba(255,255,255,0.12)'};border:1.5px solid ${filled ? psPhase.color : 'rgba(255,255,255,0.15)'}"></div>`;
   }).join('');
 
-  const pkDots = Array.from({length: pkProg.sessionsPerPhase}, (_, i) => {
-    const filled = i < pkProg.sessionsIntoPhase;
-    return `<div style="width:9px;height:9px;border-radius:50%;background:${filled ? pkPhase.color : 'rgba(255,255,255,0.12)'};border:1.5px solid ${filled ? pkPhase.color : 'rgba(255,255,255,0.15)'}"></div>`;
-  }).join('');
 
   const puNext = puProg.phaseIndex < PULLUP_PHASES.length - 1
     ? `${puProg.sessionsUntilNext} session${puProg.sessionsUntilNext !== 1 ? 's' : ''} to Phase ${puProg.phaseIndex + 2}`
     : '🏆 Final Phase';
   const psNext = psProg.phaseIndex < PUSHUP_PHASES.length - 1
     ? `${psProg.sessionsUntilNext} session${psProg.sessionsUntilNext !== 1 ? 's' : ''} to Phase ${psProg.phaseIndex + 2}`
-    : '🏆 Final Phase';
-  const pkNext = pkProg.phaseIndex < PIKE_PHASES.length - 1
-    ? `${pkProg.sessionsUntilNext} session${pkProg.sessionsUntilNext !== 1 ? 's' : ''} to Phase ${pkProg.phaseIndex + 2}`
     : '🏆 Final Phase';
 
   return `
@@ -2185,23 +2175,6 @@ function buildProgressionOverview() {
       </div>
     </div>
 
-    <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:14px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <div>
-          <div style="font-size:10px;color:rgba(255,255,255,0.3);letter-spacing:1px;text-transform:uppercase;margin-bottom:3px">🔺 Pike Push-ups · Mon</div>
-          <div style="font-size:13px;font-weight:700;color:${pkPhase.color}">Phase ${pkPhase.phase} — ${pkPhase.label}</div>
-        </div>
-        <div style="text-align:right">
-          <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:${pkPhase.color}">${pkProg.sessionCount}</div>
-          <div style="font-size:9px;color:rgba(255,255,255,0.3)">sessions</div>
-        </div>
-      </div>
-      <div style="display:flex;gap:4px;margin-bottom:8px">${miniPhaseBar(PIKE_PHASES, pkProg.phaseIndex)}</div>
-      <div style="display:flex;align-items:center;justify-content:space-between">
-        <div style="display:flex;gap:5px">${pkDots}</div>
-        <div style="font-size:10px;color:rgba(255,255,255,0.3)">${pkNext}</div>
-      </div>
-    </div>
   </div>`;
 }
 
@@ -4036,8 +4009,6 @@ function buildStatsTab() {
   const streaks = calculateStreaks();
   const puProg = getProgressionPhase('pullup');
   const psProg = getProgressionPhase('pushup');
-  const pkProg = getProgressionPhase('pike');
-
   // Build volume data for last 8 weeks
   const weeklyVolume = [];
   const now = new Date();
@@ -4133,15 +4104,6 @@ function buildStatsTab() {
           </div>
           <div style="height:6px;background:rgba(255,255,255,0.08);border-radius:10px;overflow:hidden">
             <div style="height:100%;width:${Math.round(psProg.sessionsIntoPhase/psProg.sessionsPerPhase*100)}%;background:#FF6B35;border-radius:10px"></div>
-          </div>
-        </div>
-        <div>
-          <div style="display:flex;justify-content:space-between;margin-bottom:6px">
-            <span style="font-size:13px;font-weight:600;color:#F472B6">Pike Push-ups — Phase ${pkProg.phaseIndex + 1}</span>
-            <span style="font-size:12px;color:rgba(255,255,255,0.4)">${pkProg.sessionsIntoPhase}/${pkProg.sessionsPerPhase} sessions</span>
-          </div>
-          <div style="height:6px;background:rgba(255,255,255,0.08);border-radius:10px;overflow:hidden">
-            <div style="height:100%;width:${Math.round(pkProg.sessionsIntoPhase/pkProg.sessionsPerPhase*100)}%;background:#F472B6;border-radius:10px"></div>
           </div>
         </div>
       </div>
