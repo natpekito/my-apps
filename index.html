@@ -546,7 +546,7 @@ function getProgressionPhase(type) {
   try {
     const overrideKey = type === 'pullup' ? 'natalia-pullup-phase-override' : type === 'pike' ? 'natalia-pike-phase-override' : 'natalia-pushup-phase-override';
     const override = localStorage.getItem(overrideKey);
-    if (override !== null) phaseIndex = Math.max(phaseIndex, Math.min(parseInt(override), maxPhaseIndex));
+    if (override !== null) phaseIndex = Math.min(parseInt(override), maxPhaseIndex);
   } catch(e) {}
 
   const sessionsIntoPhase = sessionCount - phaseIndex * sessionsPerPhase;
@@ -4268,6 +4268,7 @@ function exportData() {
 // ── Boot ──────────────────────────────────────────────────
 loadState();
 initSundayGuidedSets();
+try { localStorage.setItem('natalia-pushup-phase-override', '1'); } catch(e) {}
 render();
 
 // ── Guided Stretch Session ─────────────────────────────────
